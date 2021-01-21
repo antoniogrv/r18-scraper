@@ -19,21 +19,6 @@ def downloadContent(url, movieID):
     request = cloudscraper.create_scraper().get(url)
     handler = BeautifulSoup(request.text, features = "html.parser")
 
-    # header
-
-    content  = '<p style="text-align: center;"><strong><span style="font-size:22px;"><a href="MOVIE LINK" rel="nofollow">MOVIE ID</a></span><br />'
-    content += '<span style="font-size:26px;"><a href="ACTRESS(es) LINK" rel="nofollow">ACTRESS</a>'
-    content += '<span style="font-size:26px;"><a href="MOVIE LINK">&minus;<strong>TITLE&quot;</strong></span><br />'
-    content += '<a href="MOVIE LINK"/><img alt="" src="IMAGE LINK" /></a></p>'
-
-    # table
-
-    content += '<table align="center" border="1" cellpadding="1" cellspacing="1" style="width:400px"><tbody>'
-    content += '<tr><td><strong>Movie</strong></td> <td><a href="MOVIE LINK" rel="nofollow">MOVIE ID</a></td></tr>'
-    content += '<tr><td><strong>Studio</strong></td><td><a href="STUDIO LINK" rel="nofollow">STUDIO NAME</a></td></tr>'
-    content += '<tr><td><strong>Cast</strong></td><td><a href="ACTRESS(es) LINK(s)" rel="nofollow">ACTRESS(es) NAME(s)</a></td></tr>'
-    content += '<tr><td><strong>Release Date</strong></td><td>RELEASE DATE</td></tr></tbody>'
-
     # actresses
 
     actressData = []
@@ -43,9 +28,53 @@ def downloadContent(url, movieID):
     for actress in actressList:
         actressData.append(Actress(actress.text.strip(), actress["href"]))
 
-    # content-id
+    # title
+
+    title = handler.find("cite", { "itemprop" : "name" })
+
+    # content id
 
     contentID = handler.find(string = "Content ID:").find_next("dd")
+
+    # release date
+
+    releaseDate = handler.find(string = "Release Date:").find_next("dd")
+
+    # studio
+
+    studio = handler.find(string = "Studio:").find_next("a")
+
+    # header
+
+    content  = '<p style="text-align: center;"><strong><span style="font-size:22px;"><a href="' + url + '" rel="nofollow">' + movieID + '</a></span></strong><br />'
+    content += '<span style="font-size:26px;">'
+    i = 0
+    for actress in actressData:
+        i += 1
+        content += '<a href="' + actress.link + '" rel="nofollow">' + actress.name + '</a>'
+        if (i + 1) == len(actressData):
+            content += " "
+        else:
+            content += ", "
+    content += '&minus;&nbsp;<a href="' + url + '">&quot;<strong>' + title.text + '</strong>&quot;</span><br />'
+    content += '<a href="' + url + '"/><img src="IMAGE LINK" /></a></p>'
+
+    # table
+
+    content += '<table align="center" border="1" cellpadding="1" cellspacing="1" style="width:400px"><tbody>'
+    content += '<tr><td><strong>Movie</strong></td> <td><a href="' + url + '" rel="nofollow">' + movieID + '</a></td></tr>'
+    content += '<tr><td><strong>Studio</strong></td><td><a href="' + studio["href"] + '" rel="nofollow">' + studio.text + '</a></td></tr>'
+    content += '<tr><td><strong>Cast</strong></td><td>'
+    i = 0
+    for actress in actressData:
+        i += 1
+        content += '<a href="' + actress.link + '" rel="nofollow">' + actress.name + '</a>'
+        if (i + 1) == len(actressData):
+            content += " "
+        else:
+            content += ", "
+    content += '</td></tr>'
+    content += '<tr><td><strong>Release Date</strong></td><td>' + releaseDate.text + '</td></tr></tbody>'
 
     # download header image
 
@@ -56,7 +85,6 @@ def downloadContent(url, movieID):
 
     for i in range(1, 6, 1):
         imageDownload = cloudscraper.create_scraper().get('https://pics.r18.com/digital/video/' + contentID.text.strip() + '/' + contentID.text.strip() + 'jp-' + str(i) +'.jpg', allow_redirects = True)
-        print('https://pics.r18.com/digital/video/' + contentID.text.strip() + '/' + contentID.text.strip() + 'jp-' + str(i) +'.jpg')
         f = open("requests/" + movieID + "/assets/" + movieID + '-JAV-Actresses-0' + str(i) + '.jpg', 'wb')
         f.write(imageDownload.content)
         f.close()
@@ -75,7 +103,7 @@ def prepareContent(url, html, movieID):
     downloadResult = downloadContent(url[0]["href"], movieID)
 
     with io.open("requests/" + movieID + "/html.txt", "w+", encoding = "utf-8") as f:
-        f.write("to-do")
+        f.write(downloadResult)
 
 layout = [
     [
