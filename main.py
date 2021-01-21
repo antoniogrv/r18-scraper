@@ -5,6 +5,7 @@ import requests
 import cloudscraper
 import urllib.request
 import io
+import os
 import sys
 
 from pathlib import Path
@@ -55,7 +56,8 @@ def create_table(movie_id, movie_page, handler):
     return parse_html(title, release_date, studio, cast, movie_page, movie_id)
 
 def download_assets(movie_id, content_id, cast):
-    header_download_path = cloudscraper.create_scraper().get('https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'pl.jpg', allow_redirects = True)
+    header_download_url = 'https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'pl.jpg'
+    header_download_path = cloudscraper.create_scraper().get(header_download_url, allow_redirects = True)
     header_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
             
     if len(cast) == 1:
@@ -64,10 +66,14 @@ def download_assets(movie_id, content_id, cast):
 
     header_save_path += '-Header.jpg'
 
+    print('> Downloading header from: ' + header_download_url)
+    print('> Header saved to: ' + header_save_path)
+
     open(header_save_path, 'wb').write(header_download_path.content)
 
     for i in range(1, 6, 1):
-        image_download_path = cloudscraper.create_scraper().get('https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'jp-' + str(i) +'.jpg', allow_redirects = True)
+        image_download_url = 'https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'jp-' + str(i) +'.jpg'
+        image_download_path = cloudscraper.create_scraper().get(image_download_url, allow_redirects = True)
         image_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
             
         if len(cast) == 1:
@@ -76,7 +82,11 @@ def download_assets(movie_id, content_id, cast):
 
         image_save_path += '-0' + str(i) + '.jpg'
 
+        print('> Downloading image ' +  str(i) + ' from: ' + image_download_url)
+
         open(image_save_path, 'wb').write(image_download_path.content)
+
+    print('> Images saved to: ' + image_save_path)
 
 def get_handler(movie_page):
     request = cloudscraper.create_scraper().get(movie_page)
@@ -84,10 +94,20 @@ def get_handler(movie_page):
     if request.ok:
         return BeautifulSoup(request.text, features = "html.parser")
     else:
-        print("> Can't handle the workload. Exiting.")
-        exit()
+        print("> Can't handle the workload.")
+        restart()
 
-movie_id = sys.argv[0]
+def restart():
+    movie_id = sys.argv[1]
+    print('> Something went wrong. Restarting...')
+    os.system('python main.py ' + movie_id)
+    sys.exit()
+
+if len(sys.argv) == 1:
+    print("> ./main.py [MOVIE_ID]")
+    exit()
+
+movie_id = sys.argv[1]
 
 url = "https://www.r18.com/common/search/floor=movies/searchword=" + movie_id + " /"
 request = cloudscraper.create_scraper().get(url)
@@ -102,7 +122,11 @@ if request.ok:
 
         create_folders(movie_id)
 
-        print('> Generating HTML...')
+        print('> Folders created. Downloading assets...')
+
+        download_assets(movie_id, get_content_id(get_handler(movie_page)), get_cast(get_handler(movie_page)))
+
+        print('> Assets downloaded. Generating content...')
 
         table = create_table(movie_id, movie_page, get_handler(movie_page))
 
@@ -112,8 +136,10 @@ if request.ok:
 
         print('> Success!')
     else:
-        print("> Can't find the movie page. Exiting with id:" + movie_id)
+        print("> Can't find the movie page. Exiting with id: " + movie_id)
+        restart()
 
 else:
-    print("> Can't request network access. Exiting.")
+    print("> Can't request network access.")
+    restart()
 
