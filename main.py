@@ -5,14 +5,21 @@ import PySimpleGUI as gui
 import requests
 import cloudscraper
 import io
+
 from pathlib import Path
+from bs4 import BeautifulSoup
 
-def content_parser(str, movie_id):
-    Path(movie_id).mkdir(exist_ok = True)      
-    Path(movie_id + "/assets/").mkdir(exist_ok = True)
+def content_parser(url, html, movieID):
+    Path(movieID).mkdir(exist_ok = True)      
+    Path(movieID + "/assets/").mkdir(exist_ok = True)
 
-    with io.open(movie_id + "/html.txt", "w+", encoding="utf-8") as f:
-        f.write(str)
+    soup = BeautifulSoup(html, features = "html.parser")
+    parent = soup.find("li", { "data-price" : "500" })
+    children = parent.findChildren("a")
+
+    with io.open(movieID + "/html.txt", "w+", encoding = "utf-8") as f:
+        f.write(children[0]["href"])
+
 
 
 layout = [
@@ -43,7 +50,7 @@ while True:
 
         if request.text.find("1 titles found") != -1:
             frame.Element("-RESPONSE-").Update("Movie found! Parsing...")
-            content_parser(request.text, values["-ID-"].upper())
+            content_parser(url, request.text, values["-ID-"].upper())
             frame.Element("-RESPONSE-").Update("Request accepted. Files generated in /" + values["-ID-"].upper() + "/.")
         else:
             frame.Element("-RESPONSE-").Update("Movie not found.")
