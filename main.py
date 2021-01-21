@@ -2,9 +2,9 @@
 #main.py
 
 import PySimpleGUI as gui
-from bs4 import BeautifulSoup
 import settings
 import requests
+import cloudscraper
 
 layout = [
     [
@@ -29,14 +29,16 @@ while True:
     if event == gui.WIN_CLOSED:
         break
     if event == "-ID-":
-        url = "https://www.r18.com/common/search/floor=movies/searchword=" + values["-ID-"] + "/service=video/"
-        request = requests.get(url)
+            url = "https://www.r18.com/common/search/floor=movies/searchword=" + values["-ID-"] + "/service=video/"
+            request = requests.get(url)
 
-        print("[Movie "+ values["-ID-"] + "] Loading data from " + url)
+            print("[Movie "+ values["-ID-"] + "] Loading data from " + url)
 
-        soup = BeautifulSoup(request.content, features = "html.parser")
+            soup = BeautifulSoup(request.content, features = "html.parser")
 
-        frame.Element("-RESPONSE-").Update("Loading...")
+            frame.Element("-RESPONSE-").Update("Loading...")
+            scraper = cloudscraper.create_scraper()
+            print(scraper.get(url).text)
 
 
 frame.close()
