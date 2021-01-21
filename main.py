@@ -29,16 +29,18 @@ while True:
     if event == gui.WIN_CLOSED:
         break
     if event == "-ID-":
-            url = "https://www.r18.com/common/search/floor=movies/searchword=" + values["-ID-"] + "/service=video/"
-            request = requests.get(url)
+            url = "https://www.r18.com/common/search/floor=movies/searchword=" + values["-ID-"] + "/"
 
             print("[Movie "+ values["-ID-"] + "] Loading data from " + url)
-
-            soup = BeautifulSoup(request.content, features = "html.parser")
-
             frame.Element("-RESPONSE-").Update("Loading...")
-            scraper = cloudscraper.create_scraper()
-            print(scraper.get(url).text)
+
+            request = cloudscraper.create_scraper().get(url)
+
+            if "1 titles found" in request.text:
+                frame.Element("-RESPONSE-").Update("Movie found! Parsing...")
+            else:
+                frame.Element("-RESPONSE-").Update("Movie not found.")
+
 
 
 frame.close()
