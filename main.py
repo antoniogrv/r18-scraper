@@ -44,11 +44,13 @@ def downloadContent(url, movieID):
 
     studio = handler.find(string = "Studio:").find_next("a")
 
-    # header
+    # content
 
     content  = '<p style="text-align: center;"><strong><span style="font-size:22px;"><a href="' + url + '" rel="nofollow">' + movieID + '</a></span></strong><br />'
     content += '<span style="font-size:26px;">'
+
     i = 0
+
     for actress in actressData:
         i += 1
         content += '<a href="' + actress.link + '" rel="nofollow">' + actress.name + '</a>'
@@ -56,6 +58,7 @@ def downloadContent(url, movieID):
             content += " "
         else:
             content += ", "
+
     content += '&minus;&nbsp;<a href="' + url + '">&quot;<strong>' + title.text + '</strong>&quot;</span><br />'
     content += '<a href="' + url + '"/><img src="IMAGE LINK" /></a></p>'
 
@@ -65,7 +68,9 @@ def downloadContent(url, movieID):
     content += '<tr><td><strong>Movie</strong></td> <td><a href="' + url + '" rel="nofollow">' + movieID + '</a></td></tr>'
     content += '<tr><td><strong>Studio</strong></td><td><a href="' + studio["href"] + '" rel="nofollow">' + studio.text + '</a></td></tr>'
     content += '<tr><td><strong>Cast</strong></td><td>'
+
     i = 0
+
     for actress in actressData:
         i += 1
         content += '<a href="' + actress.link + '" rel="nofollow">' + actress.name + '</a>'
@@ -73,19 +78,39 @@ def downloadContent(url, movieID):
             content += " "
         else:
             content += ", "
+
     content += '</td></tr>'
     content += '<tr><td><strong>Release Date</strong></td><td>' + releaseDate.text + '</td></tr></tbody>'
+    content += '<p>&nbsp;</p><p>Text</p>'
 
     # download header image
 
     headerDownload = cloudscraper.create_scraper().get('https://pics.r18.com/digital/video/' + contentID.text.strip() + '/' + contentID.text.strip() + 'pl.jpg', allow_redirects = True)
-    open("requests/" + movieID + "/assets/" + movieID + '-JAV-Actresses-Header.jpg', 'wb').write(headerDownload.content)
+
+    headerSaved = 'requests/' + movieID + '/assets/' + movieID + '-JAV'
+        
+    if len(actressData) == 1:
+        headerSaved += "-"
+        headerSaved += actressData[0].name.replace(" ", "-")
+
+    headerSaved += '-Header.jpg'
+
+    open(headerSaved, 'wb').write(headerDownload.content)
 
     # download images
 
     for i in range(1, 6, 1):
+
+        imageSaved = 'requests/' + movieID + '/assets/' + movieID + '-JAV'
+        
+        if len(actressData) == 1:
+            imageSaved += "-"
+            imageSaved += actressData[0].name.replace(" ", "-")
+
+        imageSaved += '-0' + str(i) + '.jpg'
+
         imageDownload = cloudscraper.create_scraper().get('https://pics.r18.com/digital/video/' + contentID.text.strip() + '/' + contentID.text.strip() + 'jp-' + str(i) +'.jpg', allow_redirects = True)
-        f = open("requests/" + movieID + "/assets/" + movieID + '-JAV-Actresses-0' + str(i) + '.jpg', 'wb')
+        f = open(imageSaved, 'wb')
         f.write(imageDownload.content)
         f.close()
 
@@ -97,7 +122,7 @@ def prepareContent(url, html, movieID):
     Path('requests/' + movieID + "/assets/").mkdir(exist_ok = True)
 
     handler = BeautifulSoup(html, features = "html.parser")
-    parent = handler.find("li", { "data-price" : "500" })
+    parent = handler.find("li", { "data-tracking_id" : "dmmref" })
     url = parent.findChildren("a")
 
     downloadResult = downloadContent(url[0]["href"], movieID)
