@@ -10,6 +10,11 @@ import io
 from pathlib import Path
 from bs4 import BeautifulSoup
 
+class Actress:
+    def __init__(self, name, link):
+        self.name = name
+        self.link = link
+
 def downloadContent(url, movieID):
     request = cloudscraper.create_scraper().get(url)
     handler = BeautifulSoup(request.text, features = "html.parser")
@@ -28,6 +33,15 @@ def downloadContent(url, movieID):
     content += '<tr><td><strong>Studio</strong></td><td><a href="STUDIO LINK" rel="nofollow">STUDIO NAME</a></td></tr>'
     content += '<tr><td><strong>Cast</strong></td><td><a href="ACTRESS(es) LINK(s)" rel="nofollow">ACTRESS(es) NAME(s)</a></td></tr>'
     content += '<tr><td><strong>Release Date</strong></td><td>RELEASE DATE</td></tr></tbody>'
+
+    # actresses
+
+    actressData = []
+
+    actressList = handler.find("div", { "itemprop" : "actors" }).findChildren("a")
+
+    for actress in actressList:
+        actressData.append(Actress(actress.text.strip(), actress["href"]))
 
     # content-id
 
@@ -61,7 +75,7 @@ def prepareContent(url, html, movieID):
     downloadResult = downloadContent(url[0]["href"], movieID)
 
     with io.open("requests/" + movieID + "/html.txt", "w+", encoding = "utf-8") as f:
-        f.write(downloadResult)
+        f.write("to-do")
 
 layout = [
     [
@@ -73,7 +87,7 @@ layout = [
         gui.Text('_' * 75)
     ],
     [
-        gui.Text("Waiting for an ID...", key = "-RESPONSE-", size = (45, 1))
+        gui.Text("Waiting for an ID...", key = "-RESPONSE-", size = (50, 1))
     ]
 ]
 
@@ -86,14 +100,18 @@ while True:
         break
     if event == "-SEARCH-":
         url = "https://www.r18.com/common/search/floor=movies/searchword=" + values["-ID-"] + " /"
-
         request = cloudscraper.create_scraper().get(url)
 
-        if request.text.find("1 titles found") != -1:
-            frame.Element("-RESPONSE-").Update("Movie found! Parsing...")
-            prepareContent(url, request.text, values["-ID-"].upper())
-            frame.Element("-RESPONSE-").Update("Request accepted. Files generated in /" + values["-ID-"].upper() + "/.")
+        if request.ok:
+
+            if request.text.find("1 titles found") != -1:
+                frame.Element("-RESPONSE-").Update("Movie found! Parsing...")
+                prepareContent(url, request.text, values["-ID-"].upper())
+                frame.Element("-RESPONSE-").Update("Request accepted. Files generated in requests/" + values["-ID-"].upper() + "/.")
+            else:
+                frame.Element("-RESPONSE-").Update("Movie not found.")
         else:
-            frame.Element("-RESPONSE-").Update("Movie not found.")
+            print("Request failed (01).")
+            break
 
 frame.close()
