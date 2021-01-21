@@ -1,170 +1,119 @@
 #!/usr/bin/env python
-#main.py
 
 import PySimpleGUI as gui
 import requests
 import cloudscraper
 import urllib.request
 import io
+import sys
 
 from pathlib import Path
 from bs4 import BeautifulSoup
+from table import parse_html
+
+def get_page(request):
+    handler = BeautifulSoup(request.text, features = "html.parser")
+    parent = handler.find("li", { "data-tracking_id" : "dmmref" })
+    return parent.findChildren("a")[0]["href"];
+
+def create_folders(movie_id):
+    Path("requests/").mkdir(exist_ok = True)
+    Path('requests/' + movie_id).mkdir(exist_ok = True)      
+    Path('requests/' + movie_id + "/assets/").mkdir(exist_ok = True)
+
+def download_table(movie_id, content):
+    with io.open("requests/" + movie_id + "/html.txt", "w+", encoding = "utf-8") as f:
+        f.write(content)
 
 class Actress:
     def __init__(self, name, link):
         self.name = name
         self.link = link
 
-def downloadContent(url, movieID):
-    request = cloudscraper.create_scraper().get(url)
-    handler = BeautifulSoup(request.text, features = "html.parser")
+def get_cast(handler):
+    cast = []
 
-    # actresses
+    cast_raw = handler.find("div", { "itemprop" : "actors" }).findChildren("a")
 
-    actressData = []
+    for actress in cast_raw:
+        cast.append(Actress(actress.text.strip(), actress["href"]))
 
-    actressList = handler.find("div", { "itemprop" : "actors" }).findChildren("a")
+    return cast
 
-    for actress in actressList:
-        actressData.append(Actress(actress.text.strip(), actress["href"]))
+def get_content_id(handler):
+    print("> Finding content_id...")
+    content_id = handler.find(string = "Content ID:").find_next("dd")
+    print("> Content_id found: " + content_id.text.strip())
+    return content_id.text.strip()
 
-    # title
-
+def create_table(movie_id, movie_page, handler):
     title = handler.find("cite", { "itemprop" : "name" })
-
-    # content id
-
-    contentID = handler.find(string = "Content ID:").find_next("dd")
-
-    # release date
-
-    releaseDate = handler.find(string = "Release Date:").find_next("dd")
-
-    # studio
-
+    release_date = handler.find(string = "Release Date:").find_next("dd")
     studio = handler.find(string = "Studio:").find_next("a")
+    cast = get_cast(get_handler(movie_page))
 
-    # content
+    return parse_html(title, release_date, studio, cast, movie_page, movie_id)
 
-    content  = '<p style="text-align: center;"><strong><span style="font-size:22px;"><a href="' + url + '" rel="nofollow">' + movieID + '</a></span></strong><br />'
-    content += '<span style="font-size:26px;">'
+def download_assets(movie_id, content_id, cast):
+    header_download_path = cloudscraper.create_scraper().get('https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'pl.jpg', allow_redirects = True)
+    header_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
+            
+    if len(cast) == 1:
+        header_save_path += "-"
+        header_save_path += cast[0].name.replace(" ", "-")
 
-    i = 0
+    header_save_path += '-Header.jpg'
 
-    for actress in actressData:
-        i += 1
-        content += '<a href="' + actress.link + '" rel="nofollow">' + actress.name + '</a>'
-        if (i + 1) == len(actressData):
-            content += " "
-        else:
-            content += ", "
-
-    content += '&minus;&nbsp;<a href="' + url + '">&quot;<strong>' + title.text + '</strong>&quot;</span><br />'
-    content += '<a href="' + url + '"/><img src="IMAGE LINK" /></a></p>'
-
-    # table
-
-    content += '<table align="center" border="1" cellpadding="1" cellspacing="1" style="width:400px"><tbody>'
-    content += '<tr><td><strong>Movie</strong></td> <td><a href="' + url + '" rel="nofollow">' + movieID + '</a></td></tr>'
-    content += '<tr><td><strong>Studio</strong></td><td><a href="' + studio["href"] + '" rel="nofollow">' + studio.text + '</a></td></tr>'
-    content += '<tr><td><strong>Cast</strong></td><td>'
-
-    i = 0
-
-    for actress in actressData:
-        i += 1
-        content += '<a href="' + actress.link + '" rel="nofollow">' + actress.name + '</a>'
-        if (i + 1) == len(actressData):
-            content += " "
-        else:
-            content += ", "
-
-    content += '</td></tr>'
-    content += '<tr><td><strong>Release Date</strong></td><td>' + releaseDate.text + '</td></tr></tbody>'
-    content += '<p>&nbsp;</p><p>Text</p>'
-
-    # download header image
-
-    headerDownload = cloudscraper.create_scraper().get('https://pics.r18.com/digital/video/' + contentID.text.strip() + '/' + contentID.text.strip() + 'pl.jpg', allow_redirects = True)
-
-    headerSaved = 'requests/' + movieID + '/assets/' + movieID + '-JAV'
-        
-    if len(actressData) == 1:
-        headerSaved += "-"
-        headerSaved += actressData[0].name.replace(" ", "-")
-
-    headerSaved += '-Header.jpg'
-
-    open(headerSaved, 'wb').write(headerDownload.content)
-
-    # download images
+    open(header_save_path, 'wb').write(header_download_path.content)
 
     for i in range(1, 6, 1):
+        image_download_path = cloudscraper.create_scraper().get('https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'jp-' + str(i) +'.jpg', allow_redirects = True)
+        image_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
+            
+        if len(cast) == 1:
+            image_save_path += "-"
+            image_save_path += cast[0].name.replace(" ", "-")
 
-        imageSaved = 'requests/' + movieID + '/assets/' + movieID + '-JAV'
-        
-        if len(actressData) == 1:
-            imageSaved += "-"
-            imageSaved += actressData[0].name.replace(" ", "-")
+        image_save_path += '-0' + str(i) + '.jpg'
 
-        imageSaved += '-0' + str(i) + '.jpg'
+        open(image_save_path, 'wb').write(image_download_path.content)
 
-        imageDownload = cloudscraper.create_scraper().get('https://pics.r18.com/digital/video/' + contentID.text.strip() + '/' + contentID.text.strip() + 'jp-' + str(i) +'.jpg', allow_redirects = True)
-        f = open(imageSaved, 'wb')
-        f.write(imageDownload.content)
-        f.close()
+def get_handler(movie_page):
+    request = cloudscraper.create_scraper().get(movie_page)
 
-    return content
+    if request.ok:
+        return BeautifulSoup(request.text, features = "html.parser")
+    else:
+        print("> Can't handle the workload. Exiting.")
+        exit()
 
-def prepareContent(url, html, movieID):
-    Path("requests/").mkdir(exist_ok = True)
-    Path('requests/' + movieID).mkdir(exist_ok = True)      
-    Path('requests/' + movieID + "/assets/").mkdir(exist_ok = True)
+movie_id = sys.argv[0]
 
-    handler = BeautifulSoup(html, features = "html.parser")
-    parent = handler.find("li", { "data-tracking_id" : "dmmref" })
-    url = parent.findChildren("a")
+url = "https://www.r18.com/common/search/floor=movies/searchword=" + movie_id + " /"
+request = cloudscraper.create_scraper().get(url)
 
-    downloadResult = downloadContent(url[0]["href"], movieID)
+if request.ok:
+    if request.text.find('1 titles found') != -1:
+        print('> Movie found! Finding its page...')
 
-    with io.open("requests/" + movieID + "/html.txt", "w+", encoding = "utf-8") as f:
-        f.write(downloadResult)
+        movie_page = get_page(request)
 
-layout = [
-    [
-        gui.Text("Movie ID: "),
-        gui.In(size = (15, 1), enable_events = True, key = "-ID-"),
-        gui.Button("Search", key = "-SEARCH-", bind_return_key = True)
-    ],
-    [
-        gui.Text('_' * 75)
-    ],
-    [
-        gui.Text("Waiting for an ID...", key = "-RESPONSE-", size = (50, 1))
-    ]
-]
+        print('> Page found! Creating folders...')
 
-title = "R18 Parser"
-frame = gui.Window(title, layout)
+        create_folders(movie_id)
 
-while True:
-    event, values = frame.read()
-    if event == gui.WIN_CLOSED:
-        break
-    if event == "-SEARCH-":
-        url = "https://www.r18.com/common/search/floor=movies/searchword=" + values["-ID-"] + " /"
-        request = cloudscraper.create_scraper().get(url)
+        print('> Generating HTML...')
 
-        if request.ok:
+        table = create_table(movie_id, movie_page, get_handler(movie_page))
 
-            if request.text.find("1 titles found") != -1:
-                frame.Element("-RESPONSE-").Update("Movie found! Parsing...")
-                prepareContent(url, request.text, values["-ID-"].upper())
-                frame.Element("-RESPONSE-").Update("Request accepted. Files generated in requests/" + values["-ID-"].upper() + "/.")
-            else:
-                frame.Element("-RESPONSE-").Update("Movie not found.")
-        else:
-            print("Request failed (01).")
-            break
+        print('> Table generated. Downloading...')
 
-frame.close()
+        download_table(movie_id, table)
+
+        print('> Success!')
+    else:
+        print("> Can't find the movie page. Exiting with id:" + movie_id)
+
+else:
+    print("> Can't request network access. Exiting.")
+
