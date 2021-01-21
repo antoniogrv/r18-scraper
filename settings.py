@@ -1,4 +1,0 @@
-#settings.py
-
-FRAME_WIDTH = 400
-FRAME_HEIGHT = 400
