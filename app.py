@@ -62,17 +62,17 @@ def get_cast(handler):
     return cast
 
 def get_content_id(handler):
-    print(Colors.WARNING + "> Finding content_id..." + Colors.ENDC)
+    print(Colors.WARNING + "> Finding content ID..." + Colors.ENDC)
 
     content_id_handler = handler.find(string = "Content ID:")
 
     if content_id_handler == None:
-        print(Colors.FAIL + "> Can't find content_id." + Colors.ENDC)
+        print(Colors.FAIL + "> Can't find content ID." + Colors.ENDC)
         restart()
 
     content_id = content_id_handler.find_next("dd")
 
-    print(Colors.WARNING + "> Content_id found: " + content_id.text.strip() + Colors.ENDC)
+    print(Colors.WARNING + "> Content ID found: " + content_id.text.strip() + Colors.ENDC)
 
     return content_id.text.strip()
 
@@ -96,52 +96,68 @@ def download_assets(movie_id, content_id, cast):
     header_download_path = cloudscraper.create_scraper().get(header_download_url, allow_redirects = True)
     header_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
             
-    if len(cast) == 1:
-        header_save_path += "-"
-        header_save_path += cast[0].name.replace(" ", "-")
+    if header_download_path.ok:
+        if len(cast) == 1:
+            header_save_path += "-"
+            header_save_path += cast[0].name.replace(" ", "-")
 
-    header_save_path += '-Header.jpg'
+        header_save_path += '-Header.jpg'
 
-    print(Colors.WARNING + '> Downloading header from: ' + header_download_url + Colors.ENDC)
-    print(Colors.WARNING + '> Header saved to: ' + header_save_path + Colors.ENDC)
+        print(Colors.WARNING + '> Downloading header from: ' + header_download_url + Colors.ENDC)
+        print(Colors.WARNING + '> Header saved to: ' + header_save_path + Colors.ENDC)
 
-    open(header_save_path, 'wb').write(header_download_path.content)
+        open(header_save_path, 'wb').write(header_download_path.content)
+    else:
+        print(Colors.FAIL + "> Can't download the header image." + Colors.ENDC)
+
+    failure = 0;
+
+    print(Colors.WARNING + '> Looking for images... ' + Colors.ENDC)
 
     for i in range(1, 6, 1):
         image_download_url = 'https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'jp-' + str(i) +'.jpg'
-        image_download_path = cloudscraper.create_scraper().get(image_download_url, allow_redirects = True)
+        image_download_path = cloudscraper.create_scraper().get(image_download_url, allow_redirects = False)
         image_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
-            
-        if len(cast) == 1:
-            image_save_path += "-"
-            image_save_path += cast[0].name.replace(" ", "-")
 
-        image_save_path += '-0' + str(i) + '.jpg'
+        if len(image_download_path.history) != 0:
+            if len(cast) == 1:
+                image_save_path += "-"
+                image_save_path += cast[0].name.replace(" ", "-")
 
-        print(Colors.WARNING + '> Downloading image ' +  str(i) + ' from: ' + image_download_url + Colors.ENDC)
+            image_save_path += '-0' + str(i) + '.jpg'
 
-        open(image_save_path, 'wb').write(image_download_path.content)
+            print(Colors.WARNING + '> Downloading image ' +  str(i) + ' from: ' + image_download_url + Colors.ENDC)
 
-    print(Colors.WARNING + '> Images saved to: requests/' + movie_id + '/assets/' + Colors.ENDC)
+            open(image_save_path, 'wb').write(image_download_path.content)
+        else:
+            failure += 1;
+
+    if failure < 5:
+        print(Colors.WARNING + '> Images saved to: requests/' + movie_id + '/assets/' + Colors.ENDC)
+    else:
+        print(Colors.FAIL + "> Can't download any image. That's bad..." + Colors.ENDC)
 
     trailer_download_url = 'https://awscc3001.r18.com/litevideo/freepv/' + content_id[0] + '/'
     trailer_download_url += content_id[0 : 3] + '/' + content_id + '/' + content_id +'_dmb_w.mp4'
 
-    print(Colors.WARNING + '> Downloading MP4 trailer from: ' + trailer_download_url + Colors.ENDC)
-
     trailer_download_path = cloudscraper.create_scraper().get(trailer_download_url, allow_redirects = True)
 
-    trailer_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
+    if trailer_download_path.ok:
+        print(Colors.WARNING + '> Downloading MP4 trailer from: ' + trailer_download_url + Colors.ENDC)
 
-    if len(cast) == 1:
-        trailer_save_path += "-"
-        trailer_save_path += cast[0].name.replace(" ", "-")
+        trailer_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
 
-    trailer_save_path += '.mp4'
+        if len(cast) == 1:
+            trailer_save_path += "-"
+            trailer_save_path += cast[0].name.replace(" ", "-")
 
-    print(Colors.WARNING + '> MP4 trailer saved to: ' + trailer_save_path + Colors.ENDC)
+        trailer_save_path += '.mp4'
 
-    open(trailer_save_path, 'wb').write(trailer_download_path.content)
+        print(Colors.WARNING + '> MP4 trailer saved to: ' + trailer_save_path + Colors.ENDC)
+
+        open(trailer_save_path, 'wb').write(trailer_download_path.content)
+    else:
+        print(Colors.FAIL + "> Can't download any MP4 trailer." + Colors.ENDC)
 
 def get_handler(movie_page):
     request = cloudscraper.create_scraper().get(movie_page)
