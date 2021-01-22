@@ -5,10 +5,13 @@ import cloudscraper
 import io
 import os
 import sys
+import time
 
+from requests_html import HTMLSession
 from pathlib import Path
 from bs4 import BeautifulSoup
 from table import parse_html
+from alive_progress import alive_bar
 
 class Colors:
     HEADER = '\033[95m'
@@ -93,7 +96,7 @@ def create_table(movie_id, movie_page, handler):
 
 def download_assets(movie_id, content_id, cast):
     header_download_url = 'https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'pl.jpg'
-    header_download_path = cloudscraper.create_scraper().get(header_download_url, allow_redirects = True)
+    header_download_path = cloudscraper.create_scraper().get(header_download_url, allow_redirects = True, timeout = None)
     header_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
             
     if header_download_path.ok:
@@ -116,7 +119,7 @@ def download_assets(movie_id, content_id, cast):
 
     for i in range(1, 6, 1):
         image_download_url = 'https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'jp-' + str(i) +'.jpg'
-        image_download_path = cloudscraper.create_scraper().get(image_download_url, allow_redirects = False)
+        image_download_path = cloudscraper.create_scraper().get(image_download_url, allow_redirects = False, timeout = None)
         image_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
 
         if len(image_download_path.history) != 0:
@@ -140,7 +143,7 @@ def download_assets(movie_id, content_id, cast):
     trailer_download_url = 'https://awscc3001.r18.com/litevideo/freepv/' + content_id[0] + '/'
     trailer_download_url += content_id[0 : 3] + '/' + content_id + '/' + content_id +'_dmb_w.mp4'
 
-    trailer_download_path = cloudscraper.create_scraper().get(trailer_download_url, allow_redirects = True)
+    trailer_download_path = cloudscraper.create_scraper().get(trailer_download_url, allow_redirects = True, timeout = None)
 
     if trailer_download_path.ok:
         print(Colors.WARNING + '> Downloading MP4 trailer from: ' + trailer_download_url + Colors.ENDC)
@@ -160,7 +163,7 @@ def download_assets(movie_id, content_id, cast):
         print(Colors.FAIL + "> Can't download any MP4 trailer." + Colors.ENDC)
 
 def get_handler(movie_page):
-    request = cloudscraper.create_scraper().get(movie_page)
+    request = cloudscraper.create_scraper().get(movie_page, timeout = None)
 
     if request.ok:
         return BeautifulSoup(request.text, features = "html.parser")
@@ -181,11 +184,12 @@ if len(sys.argv) == 1:
     exit()
 
 movie_id = sys.argv[1]
-
 url = "https://www.r18.com/common/search/floor=movies/searchword=" + movie_id + " /"
-request = cloudscraper.create_scraper().get(url)
+request = cloudscraper.create_scraper().get(url, timeout = None)
 
 print(Colors.OKCYAN + "> Starting..." + Colors.ENDC)
+
+time.sleep(5)
 
 if request.ok:
     if request.text.find('1 titles found') != -1:
