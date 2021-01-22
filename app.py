@@ -139,6 +139,8 @@ def restart():
     os.system('python app.py ' + movie_id)
     sys.exit()
 
+os.system('')
+
 if len(sys.argv) == 1:
     print(Colors.BOLD + "> ./app.py [MOVIE_ID]" + Colors.ENDC)
     exit()
@@ -148,7 +150,7 @@ movie_id = sys.argv[1]
 url = "https://www.r18.com/common/search/floor=movies/searchword=" + movie_id + " /"
 request = cloudscraper.create_scraper().get(url)
 
-print(Colors.BOLD + "> Starting..." + Colors.ENDC)
+print(Colors.OKCYAN + "> Starting..." + Colors.ENDC)
 
 if request.ok:
     if request.text.find('1 titles found') != -1:
