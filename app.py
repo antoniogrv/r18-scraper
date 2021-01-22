@@ -122,7 +122,7 @@ def download_assets(movie_id, content_id, cast):
 
         open(image_save_path, 'wb').write(image_download_path.content)
 
-    print(Colors.WARNING + '> Images saved to: ' + image_save_path + Colors.ENDC)
+    print(Colors.WARNING + '> Images saved to: requests/' + movie_id + '/assets/' + Colors.ENDC)
 
 def get_handler(movie_page):
     request = cloudscraper.create_scraper().get(movie_page)
