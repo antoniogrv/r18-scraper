@@ -11,7 +11,6 @@ from requests_html import HTMLSession
 from pathlib import Path
 from bs4 import BeautifulSoup
 from table import parse_html
-from alive_progress import alive_bar
 
 class Colors:
     HEADER = '\033[95m'
@@ -122,7 +121,7 @@ def download_assets(movie_id, content_id, cast):
         image_download_path = cloudscraper.create_scraper().get(image_download_url, allow_redirects = False, timeout = None)
         image_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
 
-        if len(image_download_path.history) != 0:
+        if image_download_path.ok or len(image_download_path.history) != 0:
             if len(cast) == 1:
                 image_save_path += "-"
                 image_save_path += cast[0].name.replace(" ", "-")
@@ -177,47 +176,47 @@ def restart():
     os.system('python app.py ' + movie_id)
     sys.exit()
 
-os.system('')
+def main():
+    os.system('')
 
-if len(sys.argv) == 1:
-    print(Colors.BOLD + "> ./app.py [MOVIE_ID]" + Colors.ENDC)
-    exit()
+    if len(sys.argv) == 1:
+        print(Colors.BOLD + "> ./app.py [MOVIE_ID]" + Colors.ENDC)
+        exit()
 
-movie_id = sys.argv[1]
-url = "https://www.r18.com/common/search/floor=movies/searchword=" + movie_id + " /"
-request = cloudscraper.create_scraper().get(url, timeout = None)
+    movie_id = sys.argv[1]
+    url = "https://www.r18.com/common/search/floor=movies/searchword=" + movie_id + " /"
+    request = cloudscraper.create_scraper().get(url, timeout = None)
 
-print(Colors.OKCYAN + "> Starting..." + Colors.ENDC)
+    print(Colors.OKCYAN + "> Starting..." + Colors.ENDC)
 
-time.sleep(5)
+    if request.ok:
+        if request.text.find('1 titles found') != -1:
+            print(Colors.WARNING + '> Movie found! Finding its page...' + Colors.ENDC)
 
-if request.ok:
-    if request.text.find('1 titles found') != -1:
-        print(Colors.WARNING + '> Movie found! Finding its page...' + Colors.ENDC)
+            movie_page = get_page(request)
+                
+            print(Colors.WARNING + '> Page found! Creating folders...' + Colors.ENDC)
 
-        movie_page = get_page(request)
+            create_folders(movie_id)
 
-        print(Colors.WARNING + '> Page found! Creating folders...' + Colors.ENDC)
+            print(Colors.WARNING + '> Folders created. Generating content...' + Colors.ENDC)
 
-        create_folders(movie_id)
+            table = create_table(movie_id, movie_page, get_handler(movie_page))
+                 
+            print(Colors.WARNING + '> Content generated. Downloading content...' + Colors.ENDC)
 
-        print(Colors.WARNING + '> Folders created. Generating content...' + Colors.ENDC)
+            download_table(movie_id, table)
 
-        table = create_table(movie_id, movie_page, get_handler(movie_page))
+            print(Colors.WARNING + '> Content generated. Downloading assets...' + Colors.ENDC)
 
-        print(Colors.WARNING + '> Content generated. Downloading content...' + Colors.ENDC)
+            download_assets(movie_id, get_content_id(get_handler(movie_page)), get_cast(get_handler(movie_page)))
 
-        download_table(movie_id, table)
-
-        print(Colors.WARNING + '> Content generated. Downloading assets...' + Colors.ENDC)
-
-        download_assets(movie_id, get_content_id(get_handler(movie_page)), get_cast(get_handler(movie_page)))
-
-        print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
+            print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
+        else:
+            print(Colors.FAIL + "> Can't find the movie. " + Colors.ENDC + Colors.OKBLUE + "If you entered the wrong input, abort with CTRL-C." + Colors.ENDC)
+            restart()
     else:
-        print(Colors.FAIL + "> Can't find the movie. " + Colors.ENDC + Colors.OKBLUE + "If you entered the wrong input, abort with CTRL-C." + Colors.ENDC)
+        print(Colors.FAIL + "> Can't request network access." + Colors.ENDC)
         restart()
-else:
-    print(Colors.FAIL + "> Can't request network access." + Colors.ENDC)
-    restart()
 
+main()
