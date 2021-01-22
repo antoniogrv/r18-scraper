@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-import PySimpleGUI as gui
 import requests
 import cloudscraper
-import urllib.request
 import io
 import os
 import sys
