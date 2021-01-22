@@ -176,7 +176,7 @@ if request.ok:
 
         print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
     else:
-        print(Colors.FAIL + "> Can't find the movie page. Check the ID provided." + Colors.ENDC)
+        print(Colors.FAIL + "> Can't find the movie. Check the ID provided." + Colors.ENDC)
 
 else:
     print(Colors.FAIL + "> Can't request network access." + Colors.ENDC)
