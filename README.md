@@ -1,4 +1,4 @@
-## r18-parser by vienna
+## r18-parser
 
 Generates content about JAV movies listed on [R18](https://www.r18.com/) and formats them for [ZENRA's Blog](https://www.zenra.net/blog).  
 Creates a folder with sample images, a table with informations about the movie, and a trailer, if possible.  
@@ -14,9 +14,7 @@ It will usually try to handle the request multiple times. If it's taking too lon
 #### To-do
 
 - [X] Add support for movies without actresses listed on R18
-- [ ] Add support for VR movies
-- [ ] Download trailers if possible
+- [X] Download trailers if possible
 - [ ] Implement multiple movies input
-- [ ] Check other trusted sources to retrieve assets
 
 ![Example](https://i.gyazo.com/562d0cda85900899f15bd9e1078d046e.png)

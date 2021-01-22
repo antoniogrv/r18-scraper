@@ -126,6 +126,9 @@ def download_assets(movie_id, content_id, cast):
 
     trailer_download_url = 'https://awscc3001.r18.com/litevideo/freepv/' + content_id[0] + '/'
     trailer_download_url += content_id[0 : 3] + '/' + content_id + '/' + content_id +'_dmb_w.mp4'
+
+    print(Colors.WARNING + '> Downloading MP4 trailer from: ' + trailer_download_url + Colors.ENDC)
+
     trailer_download_path = cloudscraper.create_scraper().get(trailer_download_url, allow_redirects = True)
 
     trailer_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
@@ -136,7 +139,6 @@ def download_assets(movie_id, content_id, cast):
 
     trailer_save_path += '.mp4'
 
-    print(Colors.WARNING + '> Downloading MP4 trailer from: ' + trailer_download_url + Colors.ENDC)
     print(Colors.WARNING + '> MP4 trailer saved to: ' + trailer_save_path + Colors.ENDC)
 
     open(trailer_save_path, 'wb').write(trailer_download_path.content)
@@ -179,17 +181,17 @@ if request.ok:
 
         create_folders(movie_id)
 
-        print(Colors.WARNING + '> Folders created. Downloading assets...' + Colors.ENDC)
-
-        download_assets(movie_id, get_content_id(get_handler(movie_page)), get_cast(get_handler(movie_page)))
-
-        print(Colors.WARNING + '> Assets downloaded. Generating content...' + Colors.ENDC)
+        print(Colors.WARNING + '> Folders created. Generating content...' + Colors.ENDC)
 
         table = create_table(movie_id, movie_page, get_handler(movie_page))
 
-        print(Colors.WARNING + '> Content generated. Downloading...' + Colors.ENDC)
+        print(Colors.WARNING + '> Content generated. Downloading content...' + Colors.ENDC)
 
         download_table(movie_id, table)
+
+        print(Colors.WARNING + '> Content generated. Downloading assets...' + Colors.ENDC)
+
+        download_assets(movie_id, get_content_id(get_handler(movie_page)), get_cast(get_handler(movie_page)))
 
         print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
     else:

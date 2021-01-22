@@ -39,7 +39,7 @@ def parse_html(title, release_date, studio, cast, url, movie_id):
         content += "--"
 
     content += '</td></tr>'
-    content += '<tr><td><strong>Release Date</strong></td><td>' + release_date.text + '</td></tr></tbody>'
+    content += '<tr><td><strong>Release Date</strong></td><td>' + release_date.text + '</td></tr></tbody></table>'
     content += '<p>&nbsp;</p><p>Text</p>'
 
     return content
