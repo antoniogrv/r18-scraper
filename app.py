@@ -176,8 +176,8 @@ if request.ok:
 
         print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
     else:
-        print(Colors.FAIL + "> Can't find the movie. Check the ID provided." + Colors.ENDC)
-
+        print(Colors.FAIL + "> Can't find the movie. " + Colors.ENDC + Colors.OKBLUE + "If you entered the wrong input, abort with CTRL-C." + Colors.ENDC)
+        restart()
 else:
     print(Colors.FAIL + "> Can't request network access." + Colors.ENDC)
     restart()
