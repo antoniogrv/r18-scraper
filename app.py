@@ -137,12 +137,12 @@ def get_handler(movie_page):
 
 def restart():
     movie_id = sys.argv[1]
-    print(Colors.FAIL + '> Something went wrong. Restarting until success...' + Colors.ENDC)
-    os.system('python main.py ' + movie_id)
+    print(Colors.FAIL + '> Something went wrong. ' + Colors.BOLD + 'Restarting until success...' + Colors.ENDC + Colors.ENDC)
+    os.system('python app.py ' + movie_id)
     sys.exit()
 
 if len(sys.argv) == 1:
-    print(Colors.BOLD + "> ./main.py [MOVIE_ID]" + Colors.ENDC)
+    print(Colors.BOLD + "> ./app.py [MOVIE_ID]" + Colors.ENDC)
     exit()
 
 movie_id = sys.argv[1]
@@ -174,7 +174,7 @@ if request.ok:
 
         download_table(movie_id, table)
 
-        print(Colors.OKGREEN + '> Success!' + Colors.ENDC)
+        print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
     else:
         print(Colors.FAIL + "> Can't find the movie page. Exiting with id: " + movie_id + Colors.ENDC)
         restart()
