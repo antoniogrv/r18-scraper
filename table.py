@@ -15,7 +15,7 @@ def parse_html(title, release_date, studio, cast, url, movie_id):
 
         content += '&minus;&nbsp;'
 
-    content += '<a href="' + url + '">&quot;<strong>' + title.text + '</strong>&quot;</span><br />'
+    content += '<strong><a href="' + url + '">&quot;' + title.text + '&quot;</a></strong></span><br />'
     content += '<a href="' + url + '"/><img src="IMAGE LINK" /></a></p>'
 
     # table
