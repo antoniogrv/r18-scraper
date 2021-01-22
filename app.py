@@ -23,6 +23,11 @@ class Colors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+class Actress:
+    def __init__(self, name, link):
+        self.name = name
+        self.link = link
+
 def get_page(request):
     handler = BeautifulSoup(request.text, features = "html.parser")
     parent = handler.find("li", { "data-tracking_id" : "dmmref" })
@@ -41,11 +46,6 @@ def download_table(movie_id, content):
 
     with io.open("requests/" + movie_id + "/html.txt", "w+", encoding = "utf-8") as f:
         f.write(content)
-
-class Actress:
-    def __init__(self, name, link):
-        self.name = name
-        self.link = link
 
 def get_cast(handler):
     cast = []
