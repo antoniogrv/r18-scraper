@@ -13,7 +13,7 @@ It will usually try to handle the request multiple times. If it's taking too lon
 
 #### To-do
 
-- [ ] Add support for movies without actresses listed on R18
+- [X] Add support for movies without actresses listed on R18
 - [ ] Add support for VR movies
 - [ ] Download trailers if possible
 - [ ] Implement multiple movies input

@@ -124,6 +124,23 @@ def download_assets(movie_id, content_id, cast):
 
     print(Colors.WARNING + '> Images saved to: requests/' + movie_id + '/assets/' + Colors.ENDC)
 
+    trailer_download_url = 'https://awscc3001.r18.com/litevideo/freepv/' + content_id[0] + '/'
+    trailer_download_url += content_id[0 : 3] + '/' + content_id + '/' + content_id +'_dmb_w.mp4'
+    trailer_download_path = cloudscraper.create_scraper().get(trailer_download_url, allow_redirects = True)
+
+    trailer_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
+
+    if len(cast) == 1:
+        trailer_save_path += "-"
+        trailer_save_path += cast[0].name.replace(" ", "-")
+
+    trailer_save_path += '.mp4'
+
+    print(Colors.WARNING + '> Downloading MP4 trailer from: ' + trailer_download_url + Colors.ENDC)
+    print(Colors.WARNING + '> MP4 trailer saved to: ' + trailer_save_path + Colors.ENDC)
+
+    open(trailer_save_path, 'wb').write(trailer_download_path.content)
+
 def get_handler(movie_page):
     request = cloudscraper.create_scraper().get(movie_page)
 
