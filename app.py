@@ -135,17 +135,22 @@ class Scraper:
             cast.append(Actress(actress.text.strip(), actress["href"]))
 
         return cast
+
+    def prase_trailer_url(self):
+        pass
     
 class Handler():
     def __init__(self, id):
         self.request = None
+        self.request_url = None
 
-        start = Colors.HEADER + Colors.BOLD + "> Starting (id: " + id + ")" + Colors.HEADER + Colors.BOLD
+        start_message = Colors.HEADER + Colors.BOLD + "> Starting (id: " + id + ")" + Colors.HEADER + Colors.BOLD
 
-        print(start)
+        print(start_message)
 
         search_url = "https://www.r18.com/common/search/floor=movies/searchword=" + id + "/"
         search_request = requests.get(search_url, headers = { 'User-Agent' : 'Mozilla/5.0'})
+
         if search_request.ok and search_request.text.find('1 titles found') != -1:
             search_soup = BeautifulSoup(search_request.text, features = "html.parser")
             if (search_soup.find("li", { "data-tracking_id" : "dmmref" })) == None:
@@ -154,9 +159,14 @@ class Handler():
             print('> Request URL: ' + self.request_url)
         else:
             print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
-            exit()
+            self.request_url = None
+            exit(0)
 
     def start(self):
+        if self.request_url is None:
+            print(Colors.FAIL + "> Request failed." + Colors.ENDC)
+            return
+
         self.request = requests.get(self.request_url, headers = { 'User-Agent' : 'Mozilla/5.0' })
 
         if self.request.ok:
@@ -180,7 +190,6 @@ class Handler():
             self.download_table(self.generate_table())
 
             print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
-            exit(0)
         else:
             print(Colors.FAIL + "> Can't retrieve the movie page." + Colors.ENDC)
             self.start()
@@ -253,7 +262,7 @@ class Handler():
         trailer_download_url = 'https://awscc3001.r18.com/litevideo/freepv/' + self.movie.get_content_id()[0] + '/'
         trailer_download_url += self.movie.get_content_id()[0 : 3] + '/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() +'_dmb_w.mp4'
 
-        print(Colors.WARNING + '> Searching for a trailer...' + Colors.ENDC)
+        print(Colors.WARNING + '> Searching for a trailer at: ' + trailer_download_url + Colors.ENDC)
 
         trailer_download_path = requests.get(trailer_download_url, allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
 
@@ -289,4 +298,8 @@ class Handler():
 if len(sys.argv) == 1:
     print(Colors.BOLD + "Correct use: ./app.py <content/movie id>" + Colors.ENDC)  
 else:
-    Handler(sys.argv[1].strip()).start()
+    for i in range(1, len(sys.argv)):
+        print(Colors.OKGREEN + Colors.BOLD + '> Starting request ' + str(i) + '.' + Colors.ENDC + Colors.ENDC)
+        Handler(sys.argv[i].strip()).start()
+        if (i + 1) > len(sys.argv):
+            print('\n')

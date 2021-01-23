@@ -15,5 +15,7 @@ It will usually try to handle the request multiple times. If it's taking too lon
 
 - [X] Add support for movies without actresses listed on R18
 - [X] Download trailers if possible
+- [ ] Add multiple research feature
+- [ ] Improve trailer research
 
 ![Example](https://i.gyazo.com/562d0cda85900899f15bd9e1078d046e.png)
