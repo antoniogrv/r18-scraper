@@ -4,7 +4,7 @@ def parse_cast(cast):
 
     for actress in cast:
         i += 1
-        names += '<a href="' + actress.link + '" rel="nofollow">' + actress.name + '</a>'
+        names += '<a href="' + actress.url + '" rel="nofollow">' + actress.name + '</a>'
         if (i + 1) >= len(cast):
             names += " "
         else:
@@ -43,7 +43,7 @@ def parse_html(title, release_date, studio, cast, url, movie_id):
 
     # header : title
 
-    content += '<strong><a href="' + url + '">&quot;' + title.text + '&quot;</a></strong></span><br>'
+    content += '<strong><a href="' + url + '">&quot;' + title + '&quot;</a></strong></span><br>'
 
     # header : header image
 
@@ -59,7 +59,7 @@ def parse_html(title, release_date, studio, cast, url, movie_id):
 
     # table : studio
 
-    content += '<tr><td><strong>Studio</strong></td><td><a href="' + studio["href"] + '" rel="nofollow">' + studio.text + '</a></td></tr>'
+    content += '<tr><td><strong>Studio</strong></td><td><a href="' + studio.get_url() + '" rel="nofollow">' + studio.get_name() + '</a></td></tr>'
     
     # table : cast
     
@@ -74,7 +74,7 @@ def parse_html(title, release_date, studio, cast, url, movie_id):
 
     # table : release_date
 
-    content += '<tr><td><strong>Release Date</strong></td><td>' + release_date.text + '</td></tr>'
+    content += '<tr><td><strong>Release Date</strong></td><td>' + release_date + '</td></tr>'
     content += '</tbody></table><br>'
 
     # first 2 images

@@ -33,6 +33,17 @@ class Actress:
     def get_url(self):
         return self.url
 
+class Studio:
+    def __init__(self, name, url):
+        self.name = name
+        self.url = url
+
+    def get_name(self):
+        return self.name
+
+    def get_url(self):
+        return self.url
+
 class Movie:
     def __init__(self, content_id, url):
         self.content_id = content_id
@@ -103,7 +114,9 @@ class Scraper:
         return self.soup.find(string = "Release Date:").find_next("dd").text.strip()
 
     def parse_studio(self):
-        return self.soup.find(string = "Studio:").find_next("dd").text.strip()
+        studio_name = self.soup.find(string = "Studio:").find_next("a").text.strip()
+        studio_url = self.soup.find(string = "Studio:").find_next("a")["href"]
+        return Studio(studio_name, studio_url)
 
     def parse_cast(self):
         cast = []
@@ -238,7 +251,7 @@ class MainHandler():
         )
 
     def download_table(self, table):
-        print(Colors.WARNING + "> Downloading content in 'requests/" + movie_id + "/html.txt'" + Colors.ENDC)
+        print(Colors.WARNING + "> Downloading content in 'requests/" + self.movie.get_movie_id() + "/html.txt'" + Colors.ENDC)
 
         with io.open("requests/" + self.movie.get_movie_id() + "/html.txt", "w+", encoding = "utf-8") as f:
             f.write(table)
