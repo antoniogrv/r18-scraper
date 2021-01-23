@@ -18,5 +18,3 @@ For istance, `app.py HITMA-60 HITMA-61 RBD-225` will download a trailer (if poss
 - [X] Download trailers if possible
 - [X] Add multiple research feature
 - [X] Improve trailer research
-
-![Example](https://i.gyazo.com/562d0cda85900899f15bd9e1078d046e.png)
