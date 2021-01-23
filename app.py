@@ -194,6 +194,7 @@ class Handler():
             self.download_table(self.generate_table())
 
             print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
+            return self.generate_table() + '<br>'
         else:
             print(Colors.FAIL + "> Can't retrieve the movie page." + Colors.ENDC)
             self.start()
@@ -201,7 +202,6 @@ class Handler():
     def create_folders(self):
         print(Colors.WARNING + '> Creating folders...' + Colors.ENDC)
 
-        Path("requests/").mkdir(exist_ok = True)
         Path('requests/' + self.movie.get_movie_id()).mkdir(exist_ok = True)      
         Path('requests/' + self.movie.get_movie_id() + "/assets/").mkdir(exist_ok = True)
 
@@ -302,9 +302,13 @@ class Handler():
 if len(sys.argv) == 1:
     print(Colors.BOLD + "Correct use: ./app.py <content/movie id>" + Colors.ENDC)  
 else:
+    Path("requests/").mkdir(exist_ok = True)
+    result = ''
     for i in range(1, len(sys.argv)):
-        if i > 1:
-            print('\n')
         print(Colors.OKGREEN + Colors.BOLD + '> Starting request ' + str(i) + '.' + Colors.ENDC + Colors.ENDC)
-        Handler(sys.argv[i].strip()).start()
+        result += Handler(sys.argv[i].strip()).start()
+        print('\n')
+    print(Colors.OKGREEN + Colors.BOLD + "[!] Done. Results posted in '<source>/requests/'" + Colors.ENDC + Colors.ENDC)  
+    with io.open("requests/result.txt", "w+", encoding = "utf-8") as f:
+        f.write(result)
         
