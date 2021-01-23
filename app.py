@@ -128,6 +128,10 @@ class Scraper:
     
 class Handler():
     def __init__(self):
+        if len(sys.argv) != 2:
+            print(Colors.BOLD + "> ./app.py [MOVIE_ID]" + Colors.ENDC)
+            exit(-1)
+
         self.request = None
         self.request_url = self.request_url = "https://www.r18.com/videos/vod/movies/detail/-/id=" + sys.argv[1] + "/"
         self.movie = Movie(sys.argv[1], self.request_url)
@@ -266,10 +270,6 @@ class Handler():
 
         with io.open("requests/" + self.movie.get_movie_id() + "/html.txt", "w+", encoding = "utf-8") as f:
             f.write(table)
-
-if len(sys.argv) != 2:
-    print(Colors.BOLD + "> ./app.py [MOVIE_ID]" + Colors.ENDC)
-    exit(-1)
 
 app = Handler()
 app.start()
