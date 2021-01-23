@@ -145,6 +145,9 @@ class Handler():
                 print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
             self.request_url = search_soup.find("li", { "data-tracking_id" : "dmmref" }).findChildren("a")[0]["href"]
             print('> Request URL: ' + self.request_url)
+        else:
+            print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
+            exit()
 
     def start(self):
         self.request = requests.get(self.request_url, headers = { 'User-Agent' : 'Mozilla/5.0' })
@@ -282,8 +285,6 @@ class Handler():
             f.write(table)
 
 if len(sys.argv) == 1:
-    os.system('python app.py -h')    
+    print(Colors.BOLD + "Correct use: ./app.py <content/movie id>" + Colors.ENDC)  
 else:
-    app = Handler(sys.argv[1].strip())
-
-    app.start()
+    Handler(sys.argv[1].strip()).start()
