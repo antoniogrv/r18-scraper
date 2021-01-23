@@ -136,13 +136,17 @@ class Scraper:
 
         return cast
 
-    def prase_trailer_url(self):
-        pass
+    def parse_trailer_url(self):
+        if(self.soup.find("video") is not None):
+            return self.soup.find("video").find_next("source")["src"]
+        else:
+            return None
     
 class Handler():
     def __init__(self, id):
         self.request = None
         self.request_url = None
+        self.parser = None
 
         start_message = Colors.HEADER + Colors.BOLD + "> Starting (id: " + id + ")" + Colors.HEADER + Colors.BOLD
 
@@ -172,16 +176,16 @@ class Handler():
         if self.request.ok:
             print(Colors.OKCYAN + '> Connected successfully to R18.' + Colors.ENDC)
 
-            parser = Scraper(self.request.text)
+            self.parser = Scraper(self.request.text)
 
             print(Colors.WARNING + '> Scraping data... ' + Colors.ENDC)
 
-            self.movie = Movie(parser.parse_content_id(), self.request_url)
-            self.movie.set_movie_id(parser.parse_movie_id())
-            self.movie.set_title(parser.parse_title())
-            self.movie.set_studio(parser.parse_studio())
-            self.movie.set_release_date(parser.parse_release_date())
-            self.movie.set_cast(parser.parse_cast())
+            self.movie = Movie(self.parser.parse_content_id(), self.request_url)
+            self.movie.set_movie_id(self.parser.parse_movie_id())
+            self.movie.set_title(self.parser.parse_title())
+            self.movie.set_studio(self.parser.parse_studio())
+            self.movie.set_release_date(self.parser.parse_release_date())
+            self.movie.set_cast(self.parser.parse_cast())
 
             print(Colors.OKCYAN + '> Data obtained. Proceding...' + Colors.ENDC)
 
@@ -259,32 +263,32 @@ class Handler():
             print(Colors.FAIL + "> Can't download any image. That's bad..." + Colors.ENDC)
 
     def download_trailer(self):
-        trailer_download_url = 'https://awscc3001.r18.com/litevideo/freepv/' + self.movie.get_content_id()[0] + '/'
-        trailer_download_url += self.movie.get_content_id()[0 : 3] + '/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() +'_dmb_w.mp4'
+        trailer_download_url = self.parser.parse_trailer_url()
 
-        print(Colors.WARNING + '> Searching for a trailer at: ' + trailer_download_url + Colors.ENDC)
+        print(Colors.WARNING + '> Looking for a trailer...' + Colors.ENDC)
 
-        trailer_download_path = requests.get(trailer_download_url, allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
+        if trailer_download_url is not None:
+            trailer_download_path = requests.get(trailer_download_url, allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
+            if trailer_download_path.ok:
 
-        if trailer_download_path.ok:
-            print(Colors.WARNING + '> Downloading MP4 trailer from: ' + trailer_download_url + Colors.ENDC)
+                trailer_save_path = 'requests/' + self.movie.get_movie_id() + '/assets/'
+                trailer_save_name = self.movie.get_movie_id() + '-JAV'
 
-            trailer_save_path = 'requests/' + self.movie.get_movie_id() + '/assets/'
-            trailer_save_name = self.movie.get_movie_id() + '-JAV'
+                if len(self.movie.get_cast()) == 1:
+                    trailer_save_name += "-"
+                    trailer_save_name += self.movie.get_cast()[0].name.replace(" ", "-")
 
-            if len(self.movie.get_cast()) == 1:
-                trailer_save_name += "-"
-                trailer_save_name += self.movie.get_cast()[0].name.replace(" ", "-")
+                trailer_save_name += '.mp4'
 
-            trailer_save_name += '.mp4'
+                print(Colors.OKCYAN + '> MP4 trailer saved to: ' + trailer_save_path + trailer_save_name + Colors.ENDC)
 
-            print(Colors.OKCYAN + '> MP4 trailer saved to: ' + trailer_save_path + trailer_save_name + Colors.ENDC)
+                self.movie.set_trailer(trailer_save_name)
 
-            self.movie.set_trailer(trailer_save_name)
-
-            open(trailer_save_path + trailer_save_name, 'wb').write(trailer_download_path.content)
+                open(trailer_save_path + trailer_save_name, 'wb').write(trailer_download_path.content)
+            else:
+                print(Colors.FAIL + "> Can't obtain any MP4 trailer (can't download the file)." + Colors.ENDC)
         else:
-            print(Colors.FAIL + "> Can't download any MP4 trailer." + Colors.ENDC)
+            print(Colors.FAIL + "> Can't obtain any MP4 trailer (can't find any source)." + Colors.ENDC)
 
     def generate_table(self):
         return parse_html(self.movie)
@@ -299,7 +303,8 @@ if len(sys.argv) == 1:
     print(Colors.BOLD + "Correct use: ./app.py <content/movie id>" + Colors.ENDC)  
 else:
     for i in range(1, len(sys.argv)):
+        if i > 1:
+            print('\n')
         print(Colors.OKGREEN + Colors.BOLD + '> Starting request ' + str(i) + '.' + Colors.ENDC + Colors.ENDC)
         Handler(sys.argv[i].strip()).start()
-        if (i + 1) > len(sys.argv):
-            print('\n')
+        
