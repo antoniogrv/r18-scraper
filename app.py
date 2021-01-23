@@ -130,24 +130,23 @@ class Scraper:
         return cast
     
 class Handler():
-    def __init__(self, id, by_movie = False):
+    def __init__(self, id):
         self.request = None
-        self.by_movie = by_movie
 
-        if by_movie:
-            search_url = "https://www.r18.com/common/search/floor=movies/searchword=" + id + "/"
-            search_request = requests.get(search_url, headers = { 'User-Agent' : 'Mozilla/5.0'})
-            if search_request.ok and search_request.text.find('1 titles found') != -1:
-                search_soup = BeautifulSoup(search_request.text, features = "html.parser")
-                if (search_soup.find("li", { "data-tracking_id" : "dmmref" })) == None:
-                    print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
-                self.request_url = search_soup.find("li", { "data-tracking_id" : "dmmref" }).findChildren("a")[0]["href"]
-        else:
-            self.request_url = "https://www.r18.com/videos/vod/movies/detail/-/id=" + id + "/"
+        start = Colors.HEADER + Colors.BOLD + "> Starting (id: " + id + ")" + Colors.HEADER + Colors.BOLD
+
+        print(start)
+
+        search_url = "https://www.r18.com/common/search/floor=movies/searchword=" + id + "/"
+        search_request = requests.get(search_url, headers = { 'User-Agent' : 'Mozilla/5.0'})
+        if search_request.ok and search_request.text.find('1 titles found') != -1:
+            search_soup = BeautifulSoup(search_request.text, features = "html.parser")
+            if (search_soup.find("li", { "data-tracking_id" : "dmmref" })) == None:
+                print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
+            self.request_url = search_soup.find("li", { "data-tracking_id" : "dmmref" }).findChildren("a")[0]["href"]
+            print('> Request URL: ' + self.request_url)
 
     def start(self):
-        print(Colors.HEADER + Colors.BOLD + "> Starting..." + Colors.ENDC + Colors.ENDC)
-
         self.request = requests.get(self.request_url, headers = { 'User-Agent' : 'Mozilla/5.0' })
 
         if self.request.ok:
@@ -243,7 +242,7 @@ class Handler():
 
     def download_trailer(self):
         trailer_download_url = 'https://awscc3001.r18.com/litevideo/freepv/' + self.movie.get_content_id()[0] + '/'
-        trailer_download_url += self.movie.get_content_id()[0 : 3] + '/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() +'_dmb_w.mp4'
+        trailer_download_url += self.movie.get_content_id()[0 : 3] + '/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() +'_dmb_s.mp4'
 
         print(Colors.WARNING + '> Searching for a trailer...' + Colors.ENDC)
 
@@ -285,17 +284,6 @@ class Handler():
 if len(sys.argv) == 1:
     os.system('python app.py -h')    
 else:
-    argparser = argparse.ArgumentParser(Colors.BOLD + 'Parse a R18 page by either content ID or movie ID.\n' + Colors.ENDC)
-    argparser.add_argument('id', type = str, help = 'ID.')
-    argparser.add_argument('-m', action = 'store_true', help = 'Find the movie by its DVD ID (default: Content ID).\n')
-
-    args, uknown = argparser.parse_known_args()
-
-    app = None
-
-    if(args.m is None):
-        app = Handler(args.id.strip())
-    else:
-        app = Handler(args.id.strip(), True)
+    app = Handler(sys.argv[1].strip())
 
     app.start()
