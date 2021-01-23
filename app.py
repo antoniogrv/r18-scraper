@@ -4,6 +4,7 @@ import requests
 import io
 import os
 import sys
+import argparse
 
 from pathlib import Path
 from bs4 import BeautifulSoup
@@ -115,6 +116,9 @@ class Scraper:
         studio_url = self.soup.find(string = "Studio:").find_next("a")["href"]
         return Studio(studio_name, studio_url)
 
+    def parse_content_id(self):
+        return self.soup.find(string = "Content ID:").find_next("dd").text.strip()
+
     def parse_cast(self):
         cast = []
 
@@ -126,14 +130,20 @@ class Scraper:
         return cast
     
 class Handler():
-    def __init__(self):
-        if len(sys.argv) != 2:
-            print(Colors.BOLD + "> ./app.py [MOVIE_ID]" + Colors.ENDC)
-            exit(-1)
-
+    def __init__(self, id, by_movie = False):
         self.request = None
-        self.request_url = self.request_url = "https://www.r18.com/videos/vod/movies/detail/-/id=" + sys.argv[1] + "/"
-        self.movie = Movie(sys.argv[1], self.request_url)
+        self.by_movie = by_movie
+
+        if by_movie:
+            search_url = "https://www.r18.com/common/search/floor=movies/searchword=" + id + "/"
+            search_request = requests.get(search_url, headers = { 'User-Agent' : 'Mozilla/5.0'})
+            if search_request.ok and search_request.text.find('1 titles found') != -1:
+                search_soup = BeautifulSoup(search_request.text, features = "html.parser")
+                if (search_soup.find("li", { "data-tracking_id" : "dmmref" })) == None:
+                    print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
+                self.request_url = search_soup.find("li", { "data-tracking_id" : "dmmref" }).findChildren("a")[0]["href"]
+        else:
+            self.request_url = "https://www.r18.com/videos/vod/movies/detail/-/id=" + id + "/"
 
     def start(self):
         print(Colors.HEADER + Colors.BOLD + "> Starting..." + Colors.ENDC + Colors.ENDC)
@@ -146,6 +156,8 @@ class Handler():
             parser = Scraper(self.request.text)
 
             print(Colors.WARNING + '> Scraping data... ' + Colors.ENDC)
+
+            self.movie = Movie(parser.parse_content_id(), self.request_url)
 
             self.movie.set_movie_id(parser.parse_movie_id())
             self.movie.set_title(parser.parse_title())
@@ -270,5 +282,20 @@ class Handler():
         with io.open("requests/" + self.movie.get_movie_id() + "/html.txt", "w+", encoding = "utf-8") as f:
             f.write(table)
 
-app = Handler()
-app.start()
+if len(sys.argv) == 1:
+    os.system('python app.py -h')    
+else:
+    argparser = argparse.ArgumentParser(Colors.BOLD + 'Parse a R18 page by either content ID or movie ID.\n' + Colors.ENDC)
+    argparser.add_argument('id', type = str, help = 'ID.')
+    argparser.add_argument('-m', action = 'store_true', help = 'Find the movie by its DVD ID (default: Content ID).\n')
+
+    args, uknown = argparser.parse_known_args()
+
+    app = None
+
+    if(args.m is None):
+        app = Handler(args.id.strip())
+    else:
+        app = Handler(args.id.strip(), True)
+
+    app.start()
