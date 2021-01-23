@@ -1,4 +1,4 @@
-## r18-parser
+## r18-scraper
 
 Generates content about JAV movies listed on [R18](https://www.r18.com/) and formats them for [ZENRA's Blog](https://www.zenra.net/blog).  
 Creates a folder with sample images, a table with informations about the movie, and a trailer, if possible.  
