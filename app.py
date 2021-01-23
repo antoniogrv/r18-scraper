@@ -164,7 +164,6 @@ class Handler():
         else:
             print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
             self.request_url = None
-            exit(0)
 
     def start(self):
         if self.request_url is None:
