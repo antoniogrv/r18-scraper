@@ -4,10 +4,7 @@ import requests
 import io
 import os
 import sys
-<<<<<<< HEAD
-=======
 import argparse
->>>>>>> handler_class
 
 from pathlib import Path
 from bs4 import BeautifulSoup
@@ -28,18 +25,8 @@ class Actress:
         self.name = name
         self.url = url
 
-<<<<<<< HEAD
-def get_page(names):
-    handler = BeautifulSoup(names.text, features = "html.parser", )
-    parent = handler.find("li", { "data-tracking_id" : "dmmref" })
-    if parent == None:
-        print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
-        restart()
-    return parent.findChildren("a")[0]["href"];
-=======
     def get_name(self):
         return self.name
->>>>>>> handler_class
 
     def get_url(self):
         return self.url
@@ -64,6 +51,7 @@ class Movie:
         self.studio = None
         self.url = url
         self.cast = None
+        self.trailer = None
 
     def get_content_id(self):
         return self.content_id
@@ -86,6 +74,9 @@ class Movie:
     def get_cast(self):
         return self.cast
 
+    def get_trailer(self):
+        return self.trailer
+
     def set_content_id(self, content_id):
         self.content_id = content_id
 
@@ -107,22 +98,13 @@ class Movie:
     def set_cast(self, cast):
         self.cast = cast
 
-<<<<<<< HEAD
-def download_assets(movie_id, content_id, cast):
-    header_download_url = 'https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'pl.jpg'
-    header_download_path = requests.get(header_download_url, allow_redirects = True, timeout = None, headers={'User-Agent': 'Mozilla/5.0'})
-    header_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
-            
-    if header_download_path.ok:
-        if len(cast) == 1:
-            header_save_path += "-"
-            header_save_path += cast[0].name.replace(" ", "-")
-=======
+    def set_trailer(self, trailer):
+        self.trailer = trailer
+
 class Scraper:
     def __init__(self, html):
         self.html = html
         self.soup = BeautifulSoup(self.html, 'html.parser')
->>>>>>> handler_class
 
     def get_html(self):
         return self.html
@@ -149,15 +131,8 @@ class Scraper:
 
         cast_raw = self.soup.find("div", { "itemprop" : "actors" }).findChildren("a")
 
-<<<<<<< HEAD
-    for i in range(1, 6, 1):
-        image_download_url = 'https://pics.r18.com/digital/video/' + content_id + '/' + content_id + 'jp-' + str(i) +'.jpg'
-        image_download_path = requests.get(image_download_url, allow_redirects = False, timeout = None, headers={'User-Agent': 'Mozilla/5.0'})
-        image_save_path = 'requests/' + movie_id + '/assets/' + movie_id + '-JAV'
-=======
         for actress in cast_raw:
             cast.append(Actress(actress.text.strip(), actress["href"]))
->>>>>>> handler_class
 
         return cast
     
@@ -187,16 +162,11 @@ class Handler():
         if self.request.ok:
             print(Colors.OKCYAN + '> Connected successfully to R18.' + Colors.ENDC)
 
-<<<<<<< HEAD
-    trailer_download_path = requests.get(trailer_download_url, allow_redirects = True, timeout = None, headers={'User-Agent': 'Mozilla/5.0'})
-=======
             parser = Scraper(self.request.text)
->>>>>>> handler_class
 
             print(Colors.WARNING + '> Scraping data... ' + Colors.ENDC)
 
             self.movie = Movie(parser.parse_content_id(), self.request_url)
-
             self.movie.set_movie_id(parser.parse_movie_id())
             self.movie.set_title(parser.parse_title())
             self.movie.set_studio(parser.parse_studio())
@@ -215,23 +185,12 @@ class Handler():
             print(Colors.FAIL + "> Can't retrieve the movie page." + Colors.ENDC)
             self.start()
 
-<<<<<<< HEAD
-def get_handler(movie_page):
-    names = requests.get(movie_page, timeout = None, headers={'User-Agent': 'Mozilla/5.0'})
-
-    if names.ok:
-        return BeautifulSoup(names.text, features = "html.parser")
-    else:
-        print(Colors.FAIL + "> Can't handle the workload." + Colors.ENDC)
-        restart()
-=======
     def create_folders(self):
         print(Colors.WARNING + '> Creating folders...' + Colors.ENDC)
 
         Path("requests/").mkdir(exist_ok = True)
         Path('requests/' + self.movie.get_movie_id()).mkdir(exist_ok = True)      
         Path('requests/' + self.movie.get_movie_id() + "/assets/").mkdir(exist_ok = True)
->>>>>>> handler_class
 
     def download_assets(self):
         print(Colors.WARNING + '> Downloading assets...' +  Colors.ENDC)
@@ -244,32 +203,16 @@ def get_handler(movie_page):
         header_download_url = 'https://pics.r18.com/digital/video/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() + 'pl.jpg'
         header_download_path = requests.get(header_download_url, allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
 
-<<<<<<< HEAD
-    movie_id = sys.argv[1]
-    url = "https://www.r18.com/common/search/floor=movies/searchword=" + movie_id + " /"
-    names = requests.get(url, timeout = None, headers={'User-Agent': 'Mozilla/5.0'})
-=======
         print(Colors.WARNING + '> Downloading header from: ' + header_download_url + Colors.ENDC)
->>>>>>> handler_class
 
         header_save_path = 'requests/' + self.movie.get_movie_id() + '/assets/' + self.movie.get_movie_id() + '-JAV'
 
-<<<<<<< HEAD
-    if names.ok:
-        if names.text.find('1 titles found') != -1:
-            print(Colors.WARNING + '> Movie found! Finding its page...' + Colors.ENDC)
-
-            movie_page = get_page(names)
-                
-            print(Colors.WARNING + '> Page found! Creating folders...' + Colors.ENDC)
-=======
         if header_download_path.ok:
             if len(self.movie.get_cast()) == 1:
                 header_save_path += "-"
                 header_save_path += self.movie.get_cast()[0].name.replace(" ", "-")
 
             header_save_path += '-Header.jpg'
->>>>>>> handler_class
 
             print(Colors.OKCYAN + '> Header saved to: ' + header_save_path + Colors.ENDC)
 
@@ -304,50 +247,38 @@ def get_handler(movie_page):
         if failure < 5:
             print(Colors.OKCYAN + '> Images saved to: requests/' + self.movie.get_content_id() + '/assets/' + Colors.ENDC)
         else:
-<<<<<<< HEAD
-            print(Colors.FAIL + "> Can't find the movie. " + Colors.ENDC + Colors.OKBLUE + "If you entered the wrong input, abort with CTRL-C." + Colors.ENDC)
-            restart()
-    else:
-        print(Colors.FAIL + "> Can't names network access." + Colors.ENDC)
-        restart()
-=======
             print(Colors.FAIL + "> Can't download any image. That's bad..." + Colors.ENDC)
 
     def download_trailer(self):
         trailer_download_url = 'https://awscc3001.r18.com/litevideo/freepv/' + self.movie.get_content_id()[0] + '/'
-        trailer_download_url += self.movie.get_content_id()[0 : 3] + '/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() +'_dmb_s.mp4'
+        trailer_download_url += self.movie.get_content_id()[0 : 3] + '/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() +'_dmb_w.mp4'
 
         print(Colors.WARNING + '> Searching for a trailer...' + Colors.ENDC)
 
         trailer_download_path = requests.get(trailer_download_url, allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
->>>>>>> handler_class
 
         if trailer_download_path.ok:
             print(Colors.WARNING + '> Downloading MP4 trailer from: ' + trailer_download_url + Colors.ENDC)
 
-            trailer_save_path = 'requests/' + self.movie.get_movie_id() + '/assets/' + self.movie.get_movie_id() + '-JAV'
+            trailer_save_path = 'requests/' + self.movie.get_movie_id() + '/assets/'
+            trailer_save_name = self.movie.get_movie_id() + '-JAV'
 
             if len(self.movie.get_cast()) == 1:
-                trailer_save_path += "-"
-                trailer_save_path += self.movie.get_cast()[0].name.replace(" ", "-")
+                trailer_save_name += "-"
+                trailer_save_name += self.movie.get_cast()[0].name.replace(" ", "-")
 
-            trailer_save_path += '.mp4'
+            trailer_save_name += '.mp4'
 
-            print(Colors.OKCYAN + '> MP4 trailer saved to: ' + trailer_save_path + Colors.ENDC)
+            print(Colors.OKCYAN + '> MP4 trailer saved to: ' + trailer_save_path + trailer_save_name + Colors.ENDC)
 
-            open(trailer_save_path, 'wb').write(trailer_download_path.content)
+            self.movie.set_trailer(trailer_save_name)
+
+            open(trailer_save_path + trailer_save_name, 'wb').write(trailer_download_path.content)
         else:
             print(Colors.FAIL + "> Can't download any MP4 trailer." + Colors.ENDC)
 
     def generate_table(self):
-        return parse_html(
-            self.movie.get_title(),
-            self.movie.get_release_date(),
-            self.movie.get_studio(),
-            self.movie.get_cast(),
-            self.movie.get_url(),
-            self.movie.get_movie_id()
-        )
+        return parse_html(self.movie)
 
     def download_table(self, table):
         print(Colors.OKCYAN + "> Downloading HTML table in 'requests/" + self.movie.get_movie_id() + "/html.txt'" + Colors.ENDC)

@@ -28,26 +28,26 @@ def parse_image(movie_id, cast, number):
 
     return url
 
-def parse_html(title, release_date, studio, cast, url, movie_id):
+def parse_html(movie):
 
     # header : movie_id, title
 
-    content  = '<p style="text-align: center"><strong><span style="font-size:22px;"><a href="' + url + '" rel="nofollow">' + movie_id + '</a></span></strong><br />'
+    content  = '<p style="text-align: center"><strong><span style="font-size:22px;"><a href="' + movie.get_url() + '" rel="nofollow">' + movie.get_movie_id() + '</a></span></strong><br />'
     content += '<span style="font-size:26px;">'
 
     # header : cast
 
-    if len(cast) != 0:
-        content += parse_cast(cast)
+    if len(movie.get_cast()) != 0:
+        content += parse_cast(movie.get_cast())
         content += '&minus;&nbsp;'
 
     # header : title
 
-    content += '<strong><a href="' + url + '">&quot;' + title + '&quot;</a></strong></span><br>'
+    content += '<strong><a href="' + movie.get_url() + '">&quot;' + movie.get_title() + '&quot;</a></strong></span><br>'
 
     # header : header image
 
-    content += '<a href="' + url + '"/><img src="' + parse_image(movie_id, cast, 0) + '" /></a></p>'
+    content += '<a href="' + movie.get_url() + '"/><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 0) + '" /></a></p>'
 
     # table
 
@@ -55,18 +55,18 @@ def parse_html(title, release_date, studio, cast, url, movie_id):
 
     # table : movie_id
 
-    content += '<tr><td><strong>Movie</strong></td> <td><a href="' + url + '" rel="nofollow">' + movie_id + '</a></td></tr>'
+    content += '<tr><td><strong>Movie</strong></td> <td><a href="' + movie.get_url() + '" rel="nofollow">' + movie.get_movie_id() + '</a></td></tr>'
 
     # table : studio
 
-    content += '<tr><td><strong>Studio</strong></td><td><a href="' + studio.get_url() + '" rel="nofollow">' + studio.get_name() + '</a></td></tr>'
+    content += '<tr><td><strong>Studio</strong></td><td><a href="' + movie.get_studio().get_url() + '" rel="nofollow">' + movie.get_studio().get_name() + '</a></td></tr>'
     
     # table : cast
     
     content += '<tr><td><strong>Cast</strong></td><td>'
 
-    if len(cast) != 0:
-        content += parse_cast(cast)
+    if len(movie.get_cast()) != 0:
+        content += parse_cast(movie.get_cast())
     else:
         content += "--"
 
@@ -74,26 +74,35 @@ def parse_html(title, release_date, studio, cast, url, movie_id):
 
     # table : release_date
 
-    content += '<tr><td><strong>Release Date</strong></td><td>' + release_date + '</td></tr>'
+    content += '<tr><td><strong>Release Date</strong></td><td>' + movie.get_release_date() + '</td></tr>'
     content += '</tbody></table><br>'
 
     # first 2 images
 
     content += '<p style="text-align: center">'
-    content += '<a href="' + url + '"><img src="' + parse_image(movie_id, cast, 1) + '" /></a>'
-    content += '<a href="' + url + '"><img src="' + parse_image(movie_id, cast, 2) + '" /></a>'
+    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 1) + '" /></a>'
+    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 2) + '" /></a>'
     content += '</p>'
 
     # text
 
-    content += '<br><p>Text</p><br>'
+    content += '<p style="font-size:16px">Text</p>'
 
     # last 3 images
 
     content += '<p style="text-align: center">'
-    content += '<a href="' + url + '"><img src="' + parse_image(movie_id, cast, 3) + '" /></a>'
-    content += '<a href="' + url + '"><img src="' + parse_image(movie_id, cast, 4) + '" /></a>'
-    content += '<a href="' + url + '"><img src="' + parse_image(movie_id, cast, 5) + '" /></a>'
-    content += '</p>'
+    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 3) + '" /></a>'
+    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 4) + '" /></a>'
+    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 5) + '" /></a>'
+
+    # trailer
+
+    if(movie.get_trailer() is not None):
+        trailer_link = 'https://www.zenra.net/storage/photos/Writers/vienna/' + movie.get_movie_id() + '/' + movie.get_trailer()
+
+        content += '<br><br><span style="font-size:16px;">Check out the trailer of the movie here:</span><br>'
+        content += '<video controls="controls" height="404" preload="metadata" src="' + trailer_link + '" width="720">&nbsp;</video></span></p>'
+
+    content += '<br>'
 
     return content
