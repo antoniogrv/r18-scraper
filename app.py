@@ -4,7 +4,6 @@ import requests
 import io
 import os
 import sys
-import time
 
 from pathlib import Path
 from bs4 import BeautifulSoup
