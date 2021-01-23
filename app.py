@@ -307,7 +307,6 @@ else:
     for i in range(1, len(sys.argv)):
         print(Colors.OKGREEN + Colors.BOLD + '> Starting request ' + str(i) + '.' + Colors.ENDC + Colors.ENDC)
         result += Handler(sys.argv[i].strip()).start()
-        print('\n')
     print(Colors.OKGREEN + Colors.BOLD + "[!] Done. Results posted in '<source>/requests/'" + Colors.ENDC + Colors.ENDC)  
     with io.open("requests/result.txt", "w+", encoding = "utf-8") as f:
         f.write(result)
