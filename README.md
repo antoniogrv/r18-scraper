@@ -16,5 +16,5 @@ For istance, `app.py HITMA-60 HITMA-61 RBD-225` will download a trailer (if poss
 
 - [X] Add support for movies without actresses listed on R18
 - [X] Download trailers if possible
-- [X] Add multiple research feature
+- [X] Add multiple movie research feature
 - [X] Improve trailer research
