@@ -16,7 +16,7 @@ def parse_image(movie_id, cast, number):
     url = "https://www.zenra.net/imgcache/blog-text/photos/Writers/vienna/"
     url += movie_id + '/' + movie_id + '-JAV-'
 
-    if len(cast) != 0:
+    if len(cast) == 1:
         for actress in cast:
             url += actress.name.replace(" ", "-")
         url += "-"
@@ -80,8 +80,8 @@ def parse_html(movie):
     # first 2 images
 
     content += '<p style="text-align: center">'
-    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 1) + '" /></a>'
-    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 2) + '" /></a>'
+    content += '<a href="' + movie.get_url() + '"><img style="height: 275px !important" src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 1) + '" /></a>'
+    content += '<a href="' + movie.get_url() + '"><img style="height: 275px !important" src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 2) + '" /></a>'
     content += '</p>'
 
     # text
@@ -91,9 +91,9 @@ def parse_html(movie):
     # last 3 images
 
     content += '<p style="text-align: center">'
-    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 3) + '" /></a>'
-    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 4) + '" /></a>'
-    content += '<a href="' + movie.get_url() + '"><img src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 5) + '" /></a>'
+    content += '<a href="' + movie.get_url() + '"><img style="height: 275px !important" src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 3) + '" /></a>'
+    content += '<a href="' + movie.get_url() + '"><img style="height: 275px !important" src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 4) + '" /></a>'
+    content += '<a href="' + movie.get_url() + '"><img style="height: 275px !important" src="' + parse_image(movie.get_movie_id(), movie.get_cast(), 5) + '" /></a>'
 
     # trailer
 

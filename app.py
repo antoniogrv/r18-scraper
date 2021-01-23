@@ -7,6 +7,7 @@ import sys
 import argparse
 
 from pathlib import Path
+from html5print import HTMLBeautifier
 from bs4 import BeautifulSoup
 from table import parse_html
 
@@ -193,7 +194,7 @@ class Handler():
             self.download_table(self.generate_table())
 
             print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
-            return self.generate_table() + '<br>'
+            return (HTMLBeautifier.beautify(self.generate_table() + '<br>', 4))
         else:
             print(Colors.FAIL + "> Can't retrieve the movie page." + Colors.ENDC)
             self.start()
