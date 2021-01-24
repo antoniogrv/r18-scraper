@@ -4,10 +4,8 @@ def parse_cast(cast):
 
     for actress in cast:
         i += 1
-        names += '<a href="' + actress.url + '" rel="nofollow">' + actress.name + '</a>'
-        if (i + 1) >= len(cast):
-            names += " "
-        else:
+        names += '<a href="' + actress.url + '" rel="nofollow">' + actress.name.strip() + '</a>'
+        if (i + 1) <= len(cast):
             names += ", "
 
     return names
@@ -39,7 +37,7 @@ def parse_html(movie):
 
     if len(movie.get_cast()) != 0:
         content += parse_cast(movie.get_cast())
-        content += '&minus;&nbsp;'
+        content += '&nbsp;&minus;&nbsp;'
 
     # header : title
 
