@@ -3,6 +3,7 @@
 Generates content about JAV movies listed on [R18](https://www.r18.com/) and formats them for [ZENRA's Blog](https://www.zenra.net/blog).  
 Creates a folder with sample images, a table with informations about the movie, and a trailer, if possible.  
 
+![Preview](https://i.ibb.co/f49g1HF/ea89ed9a77ca859dbd380859a5d7ba38.png)
 
 #### Instructions
 
@@ -17,4 +18,3 @@ For istance, `app.py HITMA-60 HITMA-61 RBD-225` will download a trailer (if poss
 - [X] Add support for movies without actresses listed on R18
 - [X] Download trailers if possible
 - [X] Add multiple movie research feature
-- [X] Improve trailer research
