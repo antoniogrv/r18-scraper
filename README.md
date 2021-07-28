@@ -5,6 +5,8 @@ Creates a folder with sample images, a table with informations about the movie, 
 
 ![Preview](https://i.ibb.co/f49g1HF/ea89ed9a77ca859dbd380859a5d7ba38.png)
 
+#### Please note that, as of 07-27-2021, the script no longer works properly due to R18's recent template overhaul.
+
 #### Instructions
 
 Download the application by clicking [here](https://gitlab.com/v1enna/r18-parser/-/archive/master/r18-parser-master.zip) or clone it via `git clone https://gitlab.com/v1enna/r18-parser.git`.  
