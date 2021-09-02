@@ -5,9 +5,11 @@ import io
 import os
 import sys
 import argparse
+import time
 
 from pathlib import Path
 from html5print import HTMLBeautifier
+from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 from table import parse_html
 
@@ -52,7 +54,7 @@ class Movie:
         self.studio = None
         self.url = url
         self.cast = None
-        self.trailer = None
+        self_trailer = None
 
     def get_content_id(self):
         return self.content_id
@@ -76,7 +78,10 @@ class Movie:
         return self.cast
 
     def get_trailer(self):
-        return self.trailer
+        if(len(self.cast) == 1):
+            return self.movie_id + "-JAV-" + self.cast[0].get_name()
+        else:
+            return self.movie_id + "-JAV.mp4"
 
     def set_content_id(self, content_id):
         self.content_id = content_id
@@ -111,37 +116,32 @@ class Scraper:
         return self.html
 
     def parse_movie_id(self):
-        return self.soup.find(string = "DVD ID:").find_next("dd").text.strip()
+        return self.soup.find(string = "DVD ID").find_next("div").text.strip()
 
     def parse_title(self):
-        return self.soup.find("cite", { "itemprop" : "name" }).text.strip()
+        return self.soup.find("meta", attrs = { "property" : "og:title" }).get("content").strip()
 
     def parse_release_date(self):
-        return self.soup.find(string = "Release Date:").find_next("dd").text.strip()
+        return self.soup.find(string = "Release date").find_next("div").text.strip()
 
     def parse_studio(self):
-        studio_name = self.soup.find(string = "Studio:").find_next("a").text.strip()
-        studio_url = self.soup.find(string = "Studio:").find_next("a")["href"]
+        studio_name = self.soup.find(string = "Studio").find_next("a").text.strip()
+        studio_url = self.soup.find(string = "Studio").find_next("a")["href"]
         return Studio(studio_name, studio_url)
 
     def parse_content_id(self):
-        return self.soup.find(string = "Content ID:").find_next("dd").text.strip()
+        return self.soup.find(string = "Content ID").find_next("div").text.strip()
 
     def parse_cast(self):
         cast = []
 
-        cast_raw = self.soup.find("div", { "itemprop" : "actors" }).findChildren("a")
+        cast_div = self.soup.find("h3", string = "Actresses").find_next("div")
+        cast_span = cast_div.findChildren("a")
 
-        for actress in cast_raw:
-            cast.append(Actress(actress.text.strip(), actress["href"]))
+        for actress in cast_span:
+            cast.append(Actress(actress.text.strip(), actress.get("href")))
 
         return cast
-
-    def parse_trailer_url(self):
-        if(self.soup.find("video") is not None):
-            return self.soup.find("video").find_next("source")["src"]
-        else:
-            return None
     
 class Handler():
     def __init__(self, id):
@@ -173,10 +173,24 @@ class Handler():
 
         self.request = requests.get(self.request_url, headers = { 'User-Agent' : 'Mozilla/5.0' })
 
+        # as of 07-27-2021, requests_html is needed in order to let the javascript frontend code load before
+        # sending the to-be-scraped raw html to beautifulsoup
+
+        session = HTMLSession()
+        data = session.get(self.request_url)
+
+        # note that R18 loads the page asynchronously before showing the movie data; thus the next line is required
+
+        data.html.render(sleep = 2.5)
+
         if self.request.ok:
             print(Colors.OKCYAN + '> Connected successfully to R18.' + Colors.ENDC)
 
-            self.parser = Scraper(self.request.text)
+            self.parser = Scraper(data.html.html)
+
+            if(self.parser is None):
+                print(Colors.FAIL + "> Couldn't scrape, for any reason." + Colors.ENDC)
+                return
 
             print(Colors.WARNING + '> Scraping data... ' + Colors.ENDC)
 
@@ -194,7 +208,7 @@ class Handler():
             self.download_table(self.generate_table())
 
             print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
-            return (HTMLBeautifier.beautify(self.generate_table() + '<br>', 4))
+            return self.generate_table() + '<br>'
         else:
             print(Colors.FAIL + "> Can't retrieve the movie page." + Colors.ENDC)
             self.start()
@@ -210,7 +224,9 @@ class Handler():
 
         self.download_header()
         self.download_images()
-        self.download_trailer()
+
+        # trailer sources aren't good enough, quality-wise; it is suggested to use a different tool for this purpose
+        #self.download_trailer()
 
     def download_header(self):
         header_download_url = 'https://pics.r18.com/digital/video/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() + 'pl.jpg'
@@ -304,10 +320,12 @@ if len(sys.argv) == 1:
 else:
     Path("requests/").mkdir(exist_ok = True)
     result = ''
+    print(Colors.BOLD + "# r18-scraper (last update: 09-02-2021; current per-request timeout: 2.5)" + Colors.ENDC)
+    print(Colors.OKCYAN + "> Please note that trailer downloading is currently disabled." + Colors.ENDC)
     for i in range(1, len(sys.argv)):
         print(Colors.OKGREEN + Colors.BOLD + '> Starting request ' + str(i) + '.' + Colors.ENDC + Colors.ENDC)
         result += Handler(sys.argv[i].strip()).start()
     print(Colors.OKGREEN + Colors.BOLD + "[!] Done. Results posted in '<source>/requests/'" + Colors.ENDC + Colors.ENDC)  
     with io.open("requests/result.txt", "w+", encoding = "utf-8") as f:
-        f.write(result)
+        f.write("<p>Introduction</p><p>&nbsp;</p>" + result + "Conclusions")
         

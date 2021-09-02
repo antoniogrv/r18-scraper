@@ -4,8 +4,7 @@ def parse_cast(cast):
 
     for actress in cast:
         i += 1
-        names += '<a href="' + actress.url + '" rel="nofollow">' + actress.name.strip(
-        ) + '</a>'
+        names += '<a href="' + actress.url + '" rel="nofollow">' + actress.name + '</a>'
         if (i + 1) <= len(cast):
             names += ", "
 
@@ -84,7 +83,7 @@ def parse_html(movie):
 
     content += '<tr><td><strong>Release Date</strong></td><td>' + movie.get_release_date(
     ) + '</td></tr>'
-    content += '</tbody></table><br>'
+    content += '</tbody></table>'
 
     # trailer
 
@@ -92,13 +91,13 @@ def parse_html(movie):
         trailer_link = 'https://www.zenra.net/storage/photos/Writers/vienna/' + movie.get_movie_id(
         ) + '/' + movie.get_trailer()
 
-        content += '<br><br><span style="font-size:16px;">Check out the trailer of the movie here:</span><br>'
-        content += '<video controls="controls" height="404" preload="metadata" src="' + trailer_link + '" width="720">&nbsp;</video></span></p>'
+        content += '<p style="font-size:16px; text-align: center">'
+        content += '<span style="font-size:16px;">Check out the trailer of the movie here:</span><br>'
+        content += '<video controls="controls" height="404" preload="metadata" src="' + trailer_link + '" width="720">&nbsp;</video></span>'
 
     # first 2 images
 
-    content += '<p style="text-align: center">'
-    content += '<a href="' + movie.get_url(
+    content += '<br/><a href="' + movie.get_url(
     ) + '"><img style="height: 275px !important" src="' + parse_image(
         movie.get_movie_id(), movie.get_cast(), 1) + '" /></a>'
     content += '<a href="' + movie.get_url(
@@ -108,7 +107,7 @@ def parse_html(movie):
 
     # text
 
-    content += '<p style="font-size:16px">Text</p>'
+    content += 'Text'
 
     # last 3 images
 
@@ -123,6 +122,6 @@ def parse_html(movie):
     ) + '"><img style="height: 275px !important" src="' + parse_image(
         movie.get_movie_id(), movie.get_cast(), 5) + '" /></a>'
 
-    content += '<br>'
+    content += '</p>'
 
     return content
