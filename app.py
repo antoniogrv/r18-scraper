@@ -2,10 +2,7 @@
 
 import requests
 import io
-import os
 import sys
-import argparse
-import time
 
 from pathlib import Path
 from html5print import HTMLBeautifier
@@ -78,8 +75,9 @@ class Movie:
         return self.cast
 
     def get_trailer(self):
+        actress = self.cast[0].get_name().split(" ")
         if(len(self.cast) == 1):
-            return self.movie_id + "-JAV-" + self.cast[0].get_name()
+            return self.movie_id + "-JAV-" + actress[0] + actress[1] + ".mp4"
         else:
             return self.movie_id + "-JAV.mp4"
 
