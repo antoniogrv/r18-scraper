@@ -75,9 +75,9 @@ class Movie:
         return self.cast
 
     def get_trailer(self):
-        actress = self.cast[0].get_name().split(" ")
         if(len(self.cast) == 1):
-            return self.movie_id + "-JAV-" + actress[0] + actress[1] + ".mp4"
+            actress = self.cast[0].get_name().split(" ")
+            return self.movie_id + "-JAV-" + actress[0] + (("-" + actress[1]) if len(actress) > 1 else "") + ".mp4"
         else:
             return self.movie_id + "-JAV.mp4"
 
@@ -224,7 +224,7 @@ class Handler():
         self.download_images()
 
         # trailer sources aren't good enough, quality-wise; it is suggested to use a different tool for this purpose
-        #self.download_trailer()
+        # self.download_trailer()
 
     def download_header(self):
         header_download_url = 'https://pics.r18.com/digital/video/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() + 'pl.jpg'
@@ -318,7 +318,7 @@ if len(sys.argv) == 1:
 else:
     Path("requests/").mkdir(exist_ok = True)
     result = ''
-    print(Colors.BOLD + "# r18-scraper (last update: 09-02-2021; current per-request timeout: 2.5)" + Colors.ENDC)
+    print(Colors.BOLD + "# r18-scraper (last update: 09-18-2021; current per-request timeout: 2.5)" + Colors.ENDC)
     print(Colors.OKCYAN + "> Please note that trailer downloading is currently disabled." + Colors.ENDC)
     for i in range(1, len(sys.argv)):
         print(Colors.OKGREEN + Colors.BOLD + '> Starting request ' + str(i) + '.' + Colors.ENDC + Colors.ENDC)
