@@ -130,6 +130,9 @@ class Scraper:
     def parse_content_id(self):
         return self.soup.find(string = "Content ID").find_next("div").text.strip()
 
+    def parse_trailer_source(self):
+        return self.soup.find("source")["src"]
+
     def parse_cast(self):
         cast = []
 
@@ -145,6 +148,7 @@ class Handler():
     def __init__(self, id):
         self.request = None
         self.request_url = None
+        self.movie = None
         self.parser = None
         self.id = id
 
@@ -184,6 +188,8 @@ class Handler():
             print(Colors.OKCYAN + '> Connected successfully to R18.' + Colors.ENDC)
 
             self.parser = Scraper(data.html.html)
+
+            print(self.parser.parse_trailer_source())
 
             if(self.parser is None):
                 print(Colors.FAIL + "> Couldn't scrape, for any reason." + Colors.ENDC)
@@ -271,52 +277,33 @@ class Handler():
             print(Colors.FAIL + "> Can't download any image. That's bad..." + Colors.ENDC)
 
     def download_trailer(self):
-        content_id = self.parser.parse_content_id()
+        trailer_download_request = requests.get(self.parser.parse_trailer_source(), allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
 
-        suffixes = [
-            "_mhb_w",
-            "_dmb_w",
-            "_dmb_s",
-            "_mhb_s",
-        ]
+        print(Colors.WARNING + '> Parsing the trailer...' + Colors.ENDC)
 
-        print(Colors.WARNING + '> Looking for a trailer. Current sources: ' + str(suffixes) + Colors.ENDC)
+        if trailer_download_request.ok:
+            print(Colors.WARNING + '> Downloading trailer from: ' + self.parser.parse_trailer_source() + Colors.ENDC)
 
-        if content_id is not None:
-            for suffix in suffixes:
-                trailer_download_url = "https://awscc3001.r18.com/litevideo/freepv/" + content_id[0] + "/" + content_id[0:3] + "/" + content_id +"/" + content_id + suffix + ".mp4"
+            trailer_save_path = 'requests/' + self.movie.get_movie_id() + '/assets/'
+            trailer_save_name = self.movie.get_movie_id() + '-JAV'
 
-                print(Colors.WARNING + '> Checking for ' + suffix + ' @ ' + trailer_download_url + Colors.ENDC)
+            if len(self.movie.get_cast()) == 1:
+                trailer_save_name += "-"
+                trailer_save_name += self.movie.get_cast()[0].name.replace(" ", "-")
 
-                trailer_download_temp_path = requests.get(trailer_download_url, allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
-                
-                if trailer_download_temp_path.ok:
-                    trailer_download_path = trailer_download_temp_path
-                    break
+            trailer_save_name += '.mp4'
 
-            if trailer_download_path is not None:
-                print(Colors.OKCYAN + '> Downloading trailer from ' + trailer_download_url + Colors.ENDC)
+            print(Colors.OKCYAN + '> MP4 trailer saved to: ' + trailer_save_path + trailer_save_name + Colors.ENDC)
 
-                trailer_save_path = 'requests/' + self.movie.get_movie_id() + '/assets/'
-                trailer_save_name = self.movie.get_movie_id() + '-JAV'
+            self.movie.set_trailer(trailer_save_name)
 
-                if len(self.movie.get_cast()) == 1:
-                    trailer_save_name += "-"
-                    trailer_save_name += self.movie.get_cast()[0].name.replace(" ", "-")
-
-                trailer_save_name += '.mp4'
-
-                print(Colors.OKCYAN + '> MP4 trailer saved to: ' + trailer_save_path + trailer_save_name + Colors.ENDC)
-
-                self.movie.set_trailer(trailer_save_name)
-
-                open(trailer_save_path + trailer_save_name, 'wb').write(trailer_download_path.content)
-            else:
-                print(Colors.FAIL + "> Can't obtain any MP4 trailer (can't download the file)." + Colors.ENDC)
+            open(trailer_save_path + trailer_save_name, 'wb').write(trailer_download_request.content)
         else:
-            print(Colors.FAIL + "> Can't obtain any MP4 trailer (can't find any source)." + Colors.ENDC)
+            print(Colors.FAIL + "> Can't obtain any MP4 trailers for this movie." + Colors.ENDC)
 
     def generate_table(self):
+        print(Colors.WARNING + '> Generating HTML...' + Colors.ENDC)
+
         return parse_html(self.movie)
 
     def download_table(self, table):
