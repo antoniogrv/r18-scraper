@@ -146,10 +146,9 @@ class Handler():
         self.request = None
         self.request_url = None
         self.parser = None
+        self.id = id
 
-        start_message = Colors.HEADER + Colors.BOLD + "> Starting (id: " + id + ")" + Colors.HEADER + Colors.BOLD
-
-        print(start_message)
+        print(Colors.HEADER + Colors.BOLD + "> Starting (id: " + id + ")" + Colors.HEADER + Colors.BOLD)
 
         search_url = "https://www.r18.com/common/search/floor=movies/searchword=" + id + "/"
         search_request = requests.get(search_url, headers = { 'User-Agent' : 'Mozilla/5.0'})
@@ -166,7 +165,7 @@ class Handler():
 
     def start(self):
         if self.request_url is None:
-            print(Colors.FAIL + "> Request failed." + Colors.ENDC)
+            print(Colors.FAIL + "> Request for " + self.id +" has failed." + Colors.ENDC)
             return
 
         self.request = requests.get(self.request_url, headers = { 'User-Agent' : 'Mozilla/5.0' })
@@ -222,9 +221,7 @@ class Handler():
 
         self.download_header()
         self.download_images()
-
-        # trailer sources aren't good enough, quality-wise; it is suggested to use a different tool for this purpose
-        # self.download_trailer()
+        self.download_trailer()
 
     def download_header(self):
         header_download_url = 'https://pics.r18.com/digital/video/' + self.movie.get_content_id() + '/' + self.movie.get_content_id() + 'pl.jpg'
@@ -254,8 +251,7 @@ class Handler():
 
         for i in range(1, 6, 1):
             image_download_url = 'https://pics.r18.com/digital/video/' + self.movie.get_content_id()  + '/' + self.movie.get_content_id()  + 'jp-' + str(i) +'.jpg'
-            image_download_path = requests.get(image_download_url, allow_redirects = False, headers = { 'User-Agent' : 'Mozilla/5.0' })
-            
+            image_download_path = requests.get(image_download_url, allow_redirects = False, headers = { 'User-Agent' : 'Mozilla/5.0' })  
             image_save_path = 'requests/' + self.movie.get_movie_id() + '/assets/' + self.movie.get_movie_id() + '-JAV'
 
             if image_download_path.ok or len(image_download_path.history) != 0:
@@ -264,8 +260,6 @@ class Handler():
                     image_save_path += self.movie.get_cast()[0].name.replace(" ", "-")
 
                 image_save_path += '-0' + str(i) + '.jpg'
-
-                print(Colors.WARNING + '> Downloading image ' +  str(i) + ' from: ' + image_download_url + Colors.ENDC)
 
                 open(image_save_path, 'wb').write(image_download_path.content)
             else:
@@ -277,13 +271,31 @@ class Handler():
             print(Colors.FAIL + "> Can't download any image. That's bad..." + Colors.ENDC)
 
     def download_trailer(self):
-        trailer_download_url = self.parser.parse_trailer_url()
+        content_id = self.parser.parse_content_id()
 
-        print(Colors.WARNING + '> Looking for a trailer...' + Colors.ENDC)
+        suffixes = [
+            "_mhb_w",
+            "_dmb_w",
+            "_dmb_s",
+            "_mhb_s",
+        ]
 
-        if trailer_download_url is not None:
-            trailer_download_path = requests.get(trailer_download_url, allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
-            if trailer_download_path.ok:
+        print(Colors.WARNING + '> Looking for a trailer. Current sources: ' + str(suffixes) + Colors.ENDC)
+
+        if content_id is not None:
+            for suffix in suffixes:
+                trailer_download_url = "https://awscc3001.r18.com/litevideo/freepv/" + content_id[0] + "/" + content_id[0:3] + "/" + content_id +"/" + content_id + suffix + ".mp4"
+
+                print(Colors.WARNING + '> Checking for ' + suffix + ' @ ' + trailer_download_url + Colors.ENDC)
+
+                trailer_download_temp_path = requests.get(trailer_download_url, allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
+                
+                if trailer_download_temp_path.ok:
+                    trailer_download_path = trailer_download_temp_path
+                    break
+
+            if trailer_download_path is not None:
+                print(Colors.OKCYAN + '> Downloading trailer from ' + trailer_download_url + Colors.ENDC)
 
                 trailer_save_path = 'requests/' + self.movie.get_movie_id() + '/assets/'
                 trailer_save_name = self.movie.get_movie_id() + '-JAV'
@@ -308,7 +320,7 @@ class Handler():
         return parse_html(self.movie)
 
     def download_table(self, table):
-        print(Colors.OKCYAN + "> Downloading HTML table in 'requests/" + self.movie.get_movie_id() + "/html.txt'" + Colors.ENDC)
+        print(Colors.OKCYAN + "> Saving HTML table to: requests/" + self.movie.get_movie_id() + "/html.txt" + Colors.ENDC)
 
         with io.open("requests/" + self.movie.get_movie_id() + "/html.txt", "w+", encoding = "utf-8") as f:
             f.write(table)
@@ -317,13 +329,26 @@ if len(sys.argv) == 1:
     print(Colors.BOLD + "Correct use: ./app.py <content/movie id>" + Colors.ENDC)  
 else:
     Path("requests/").mkdir(exist_ok = True)
-    result = ''
-    print(Colors.BOLD + "# r18-scraper (last update: 09-18-2021; current per-request timeout: 2.5)" + Colors.ENDC)
-    print(Colors.OKCYAN + "> Please note that trailer downloading is currently disabled." + Colors.ENDC)
+
+    result = ""
+    success = False
+
+    print(Colors.BOLD + "# r18-scraper (last update: 09-22-2021; current per-request timeout: 2.5)" + Colors.ENDC)
+
     for i in range(1, len(sys.argv)):
-        print(Colors.OKGREEN + Colors.BOLD + '> Starting request ' + str(i) + '.' + Colors.ENDC + Colors.ENDC)
-        result += Handler(sys.argv[i].strip()).start()
-    print(Colors.OKGREEN + Colors.BOLD + "[!] Done. Results posted in '<source>/requests/'" + Colors.ENDC + Colors.ENDC)  
-    with io.open("requests/result.txt", "w+", encoding = "utf-8") as f:
-        f.write("<p>Introduction</p><p>&nbsp;</p>" + result + "Conclusions")
-        
+        print(Colors.OKGREEN + Colors.BOLD + '# Starting request ' + str(i) + '.' + Colors.ENDC + Colors.ENDC)
+
+        handler = Handler(sys.argv[i].strip()).start()
+
+        if handler is not None:
+            success = True
+            result += handler if (handler is not None) else ""
+
+    if success == True:
+        print(Colors.OKGREEN + Colors.BOLD + "[!] Done. Results posted in '<source>/requests/'." + Colors.ENDC + Colors.ENDC)  
+
+        with io.open("requests/result.txt", "w+", encoding = "utf-8") as f:
+            f.write("<p>Introduction</p><p>&nbsp;</p>" + result + "Conclusions")  
+            
+    else:
+        print(Colors.FAIL + "> [!] Every request failed." + Colors.ENDC)
