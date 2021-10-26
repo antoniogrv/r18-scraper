@@ -32,9 +32,7 @@ def parse_html(movie):
 
     # header : movie_id, title
 
-    content = '<p style="text-align: center"><strong><span style="font-size:22px;"><a href="' + movie.get_url(
-    ) + '" rel="nofollow">' + movie.get_movie_id(
-    ) + '</a></span></strong><br />'
+    content = '<p style="text-align: center"><strong><span style="font-size:22px;"><a href="' + movie.get_url() + '" rel="nofollow">' + movie.get_movie_id() + '</a></span></strong><br />'
     content += '<span style="font-size:26px;">'
 
     # header : cast

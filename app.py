@@ -1,14 +1,11 @@
-#!/usr/bin/env python
-
-import requests
 import io
-import sys
+import os
+import pathlib
+import requests
 
-from pathlib import Path
-from html5print import HTMLBeautifier
-from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 from table import parse_html
+from pathlib import Path
 
 class Colors:
     HEADER = '\033[95m'
@@ -20,98 +17,44 @@ class Colors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-class Actress:
-    def __init__(self, name, url):
-        self.name = name
-        self.url = url
-
-    def get_name(self):
-        return self.name
-
-    def get_url(self):
-        return self.url
-
-class Studio:
-    def __init__(self, name, url):
-        self.name = name
-        self.url = url
-
-    def get_name(self):
-        return self.name
-
-    def get_url(self):
-        return self.url
-
-class Movie:
-    def __init__(self, content_id, url):
-        self.content_id = content_id
-        self.movie_id = None
-        self.title = None
-        self.release_date = None
-        self.studio = None
-        self.url = url
-        self.cast = None
-        self_trailer = None
-
-    def get_content_id(self):
-        return self.content_id
-
-    def get_movie_id(self):
-        return self.movie_id
-
-    def get_title(self):
-        return self.title
-
-    def get_release_date(self):
-        return self.release_date
-
-    def get_studio(self):
-        return self.studio
-
-    def get_url(self):
-        return self.url
-
-    def get_cast(self):
-        return self.cast
-
-    def get_trailer(self):
-        if(len(self.cast) == 1):
-            actress = self.cast[0].get_name().split(" ")
-            return self.movie_id + "-JAV-" + actress[0] + (("-" + actress[1]) if len(actress) > 1 else "") + ".mp4"
-        else:
-            return self.movie_id + "-JAV.mp4"
-
-    def set_content_id(self, content_id):
-        self.content_id = content_id
-
-    def set_movie_id(self, movie_id):
-        self.movie_id = movie_id
-
-    def set_title(self, title):
-        self.title = title
-
-    def set_release_date(self, release_date):
-        self.release_date = release_date
-
-    def set_studio(self, studio):
-        self.studio = studio
-
-    def set_url(self, url):
-        self.url = url
-
-    def set_cast(self, cast):
-        self.cast = cast
-
-    def set_trailer(self, trailer):
-        self.trailer = trailer
-
 class Scraper:
     def __init__(self, html):
+        self.movie = None
+        self.result = None
         self.html = html
         self.soup = BeautifulSoup(self.html, 'html.parser')
+        self.request_id = self.parse_content_id()
 
-    def get_html(self):
-        return self.html
+        self.start()
+
+    def start(self):
+        self.movie = Movie(
+            self.request_id,
+            self.parse_movie_id(),
+            self.parse_title(),
+            self.parse_release_date(),
+            self.parse_studio(),
+            self.parse_url(),
+            self.parse_cast(),
+            self.parse_trailer_source()
+        )
+        self.create_folders()
+        self.download_assets()
+
+    def parse_url(self):
+        search_url = "https://www.r18.com/common/search/floor=movies/searchword=" + self.request_id + "/"
+        search_request = requests.get(search_url, headers = { 'User-Agent' : 'Mozilla/5.0'})
+
+        print(Colors.WARNING + "> Request URL: " + search_url + Colors.ENDC)
+
+        if search_request.ok and search_request.text.find('1 titles found') != -1:
+            search_soup = BeautifulSoup(search_request.text, features = "html.parser")
+            if (search_soup.find("li", { "data-tracking_id" : "dmmref" })) == None:
+                print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
+            return search_soup.find("li", { "data-tracking_id" : "dmmref" }).findChildren("a")[0]["href"]
+        else:
+            print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
+            return None
 
     def parse_movie_id(self):
         return self.soup.find(string = "DVD ID").find_next("div").text.strip()
@@ -147,7 +90,6 @@ class Scraper:
 
         return sources
 
-
     def parse_cast(self):
         cast = []
 
@@ -158,81 +100,11 @@ class Scraper:
             cast.append(Actress(actress.text.strip(), actress.get("href")))
 
         return cast
-    
-class Handler():
-    def __init__(self, id):
-        self.request = None
-        self.request_url = None
-        self.movie = None
-        self.parser = None
-        self.id = id
-
-        print(Colors.HEADER + Colors.BOLD + "> Starting (id: " + id + ")" + Colors.HEADER + Colors.BOLD)
-
-        search_url = "https://www.r18.com/common/search/floor=movies/searchword=" + id + "/"
-        search_request = requests.get(search_url, headers = { 'User-Agent' : 'Mozilla/5.0'})
-
-        if search_request.ok and search_request.text.find('1 titles found') != -1:
-            search_soup = BeautifulSoup(search_request.text, features = "html.parser")
-            if (search_soup.find("li", { "data-tracking_id" : "dmmref" })) == None:
-                print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
-            self.request_url = search_soup.find("li", { "data-tracking_id" : "dmmref" }).findChildren("a")[0]["href"]
-            print('> Request URL: ' + self.request_url)
-        else:
-            print(Colors.FAIL + "> Script failure. Can't retrieve the movie page." + Colors.ENDC)
-            self.request_url = None
-
-    def start(self):
-        if self.request_url is None:
-            print(Colors.FAIL + "> Request for " + self.id +" has failed." + Colors.ENDC)
-            return
-
-        self.request = requests.get(self.request_url, headers = { 'User-Agent' : 'Mozilla/5.0' })
-
-        # as of 07-27-2021, requests_html is needed in order to let the javascript frontend code load before
-        # sending the to-be-scraped raw html to beautifulsoup
-
-        session = HTMLSession()
-        data = session.get(self.request_url)
-
-        # note that R18 loads the page asynchronously before showing the movie data; thus the next line is required
-
-        data.html.render(sleep = 2.5)
-
-        if self.request.ok:
-            print(Colors.OKCYAN + '> Connected successfully to R18.' + Colors.ENDC)
-
-            self.parser = Scraper(data.html.html)
-
-            if(self.parser is None):
-                print(Colors.FAIL + "> Couldn't scrape, for any reason." + Colors.ENDC)
-                return
-
-            print(Colors.WARNING + '> Scraping data... ' + Colors.ENDC)
-
-            self.movie = Movie(self.parser.parse_content_id(), self.request_url)
-            self.movie.set_movie_id(self.parser.parse_movie_id())
-            self.movie.set_title(self.parser.parse_title())
-            self.movie.set_studio(self.parser.parse_studio())
-            self.movie.set_release_date(self.parser.parse_release_date())
-            self.movie.set_cast(self.parser.parse_cast())
-
-            print(Colors.OKCYAN + '> Data obtained. Proceding...' + Colors.ENDC)
-
-            self.create_folders()
-            self.download_assets()
-            self.download_table(self.generate_table())
-
-            print(Colors.OKGREEN + Colors.BOLD + '> Success!' + Colors.ENDC + Colors.ENDC)
-            return self.generate_table() + '<br>'
-        else:
-            print(Colors.FAIL + "> Can't retrieve the movie page." + Colors.ENDC)
-            self.start()
 
     def create_folders(self):
-        print(Colors.WARNING + '> Creating folders...' + Colors.ENDC)
+        print(Colors.WARNING + '> Creating folders...' +  Colors.ENDC)
 
-        Path('requests/' + self.movie.get_movie_id()).mkdir(exist_ok = True)      
+        Path('requests/' + self.movie.get_movie_id()).mkdir(exist_ok = True)
         Path('requests/' + self.movie.get_movie_id() + "/assets/").mkdir(exist_ok = True)
 
     def download_assets(self):
@@ -292,7 +164,7 @@ class Handler():
     def download_trailer(self):
         print(Colors.WARNING + '> Parsing the trailer...' + Colors.ENDC)
 
-        for source in self.parser.parse_trailer_source():
+        for source in self.parse_trailer_source():
             print(Colors.WARNING + '> Scanning trailer source: ' + source + Colors.ENDC)
            
             trailer_download_request = requests.get(source, allow_redirects = True, headers = { 'User-Agent' : 'Mozilla/5.0' })
@@ -320,41 +192,116 @@ class Handler():
         if trailer_exists == False:
             print(Colors.FAIL + "> Can't obtain any MP4 trailers for this movie." + Colors.ENDC)
 
-    def generate_table(self):
-        print(Colors.WARNING + '> Generating HTML...' + Colors.ENDC)
+    def get_movie(self):
+        return self.movie
 
-        return parse_html(self.movie)
+    def get_result(self):
+        self.result = parse_html(self.movie)
 
-    def download_table(self, table):
         print(Colors.OKCYAN + "> Saving HTML table to: requests/" + self.movie.get_movie_id() + "/html.txt" + Colors.ENDC)
 
         with io.open("requests/" + self.movie.get_movie_id() + "/html.txt", "w+", encoding = "utf-8") as f:
-            f.write(table)
+            f.write(result)
 
-if len(sys.argv) == 1:
-    print(Colors.BOLD + "Correct use: ./app.py <content/movie id>" + Colors.ENDC)  
-else:
-    Path("requests/").mkdir(exist_ok = True)
+        return self.result
 
-    result = ""
-    success = False
+class Actress:
+    def __init__(self, name, url):
+        self.name = name
+        self.url = url
 
-    print(Colors.BOLD + "# r18-scraper (last update: 09-22-2021; current per-request timeout: 2.5)" + Colors.ENDC)
+    def get_name(self):
+        return self.name
 
-    for i in range(1, len(sys.argv)):
-        print(Colors.OKGREEN + Colors.BOLD + '# Starting request ' + str(i) + '.' + Colors.ENDC + Colors.ENDC)
+    def get_url(self):
+        return self.url
 
-        handler = Handler(sys.argv[i].strip()).start()
+class Studio:
+    def __init__(self, name, url):
+        self.name = name
+        self.url = url
 
-        if handler is not None:
-            success = True
-            result += handler if (handler is not None) else ""
+    def get_name(self):
+        return self.name
 
-    if success == True:
-        print(Colors.OKGREEN + Colors.BOLD + "[!] Done. Results posted in '<source>/requests/'." + Colors.ENDC + Colors.ENDC)  
+    def get_url(self):
+        return self.url
 
-        with io.open("requests/result.txt", "w+", encoding = "utf-8") as f:
-            f.write("<p>Introduction</p><p>&nbsp;</p>" + result + "Conclusions")  
-            
-    else:
-        print(Colors.FAIL + "> [!] Every request failed." + Colors.ENDC)
+class Movie:
+    def __init__(self, content_id, movie_id, title, release_date, studio, url, cast, trailer):
+        self.content_id = content_id
+        self.movie_id = movie_id
+        self.title = title
+        self.release_date = release_date
+        self.studio = studio
+        self.url = url
+        self.cast = cast
+        self.trailer = trailer
+
+    def get_content_id(self):
+        return self.content_id
+
+    def get_movie_id(self):
+        return self.movie_id
+
+    def get_title(self):
+        return self.title
+
+    def get_release_date(self):
+        return self.release_date
+
+    def get_studio(self):
+        return self.studio
+
+    def get_url(self):
+        return self.url
+
+    def get_cast(self):
+        return self.cast
+
+    def get_trailer(self):
+        if(len(self.cast) == 1):
+            actress = self.cast[0].get_name().split(" ")
+            return self.movie_id + "-JAV-" + actress[0] + (("-" + actress[1]) if len(actress) > 1 else "") + ".mp4"
+        else:
+            return self.movie_id + "-JAV.mp4"
+
+    def set_content_id(self, content_id):
+        self.content_id = content_id
+
+    def set_movie_id(self, movie_id):
+        self.movie_id = movie_id
+
+    def set_title(self, title):
+        self.title = title
+
+    def set_release_date(self, release_date):
+        self.release_date = release_date
+
+    def set_studio(self, studio):
+        self.studio = studio
+
+    def set_url(self, url):
+        self.url = url
+
+    def set_cast(self, cast):
+        self.cast = cast
+
+    def set_trailer(self, trailer):
+        self.trailer = trailer
+
+Path("requests/").mkdir(exist_ok = True)
+
+print(Colors.BOLD + "# r18-scraper [manual] (last update: 10-26-2021; current per-request timeout: 0s)" + Colors.ENDC)
+
+result = "" # result contains the requested html
+
+for filename in os.listdir("source"):
+    f = os.path.join("source", filename)
+    if(os.path.isfile(f)):
+        with open(f, encoding="utf8") as content:
+            result += Scraper(content.read()).get_result()
+
+print(Colors.OKGREEN + Colors.BOLD + "[!] Done. Results posted in '<root>/requests/'." + Colors.ENDC)  
+with io.open("requests/result.txt", "w+", encoding = "utf-8") as f:
+    f.write("<p>Introduction</p><p>&nbsp;</p>" + result + "Conclusions") 
