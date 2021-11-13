@@ -1,6 +1,6 @@
 ## r18-scraper
 
-### [!] Doesn't work anymore as of 10-26-2021.
+### [ ! ] Doesn't work properly anymore as of 10-26-2021.
 Sadly, R18 recently updated its ant-scraping measures, making the already deprecated [request-html](https://requests.readthedocs.io/projects/requests-html/en/latest/)'s HTTPSessions even more useless. Right now, I don't feel like over-engineering how to scrape automatically (ie. using a headless browser) data from R18, so I'm probably going to implement a less-optimal software to achieve my needs. Still, in the future options such as [Selenium](https://www.selenium.dev/) could be explored.
 
 Generates content about JAV movies listed on [R18](https://www.r18.com/) and formats them for ZENRA's Blog.  
