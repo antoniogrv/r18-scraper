@@ -164,6 +164,8 @@ class Scraper:
     def download_trailer(self):
         print(Colors.WARNING + '> Parsing the trailer...' + Colors.ENDC)
 
+        trailer_exists = False
+
         for source in self.parse_trailer_source():
             print(Colors.WARNING + '> Scanning trailer source: ' + source + Colors.ENDC)
            
@@ -292,7 +294,7 @@ class Movie:
 
 Path("requests/").mkdir(exist_ok = True)
 
-print(Colors.BOLD + "# r18-scraper [manual] (last update: 10-26-2021; current per-request timeout: 0s)" + Colors.ENDC)
+print(Colors.BOLD + "# r18-scraper [manual] (last update: 11-15-2021; current per-request timeout: 0s)" + Colors.ENDC)
 
 result = "" # result contains the requested html
 
