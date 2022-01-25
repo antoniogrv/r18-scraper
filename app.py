@@ -74,6 +74,10 @@ class Scraper:
         return self.soup.find(string = "Content ID").find_next("div").text.strip()
 
     def parse_trailer_source(self):
+        if(self.soup.find("source") == None):
+            print(Colors.FAIL + "> No trailers found." + Colors.ENDC)
+            return None
+
         raw_trailer = self.soup.find("source")["src"].split("_")[0]
 
         suffixes = [
